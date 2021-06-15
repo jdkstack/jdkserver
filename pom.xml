@@ -17,6 +17,7 @@
   <modules>
     <module>jdkserver-http</module>
     <module>jdkserver-tcp</module>
+    <module>jdkserver-udp</module>
   </modules>
   <properties>
     <!--  1:统一字符集编码UTF-8 -->

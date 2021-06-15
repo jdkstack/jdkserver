@@ -8,7 +8,9 @@ import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.net.BindException;
 import java.net.InetSocketAddress;
+import java.net.ProtocolFamily;
 import java.net.ServerSocket;
+import java.net.StandardProtocolFamily;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.CancelledKeyException;
@@ -16,6 +18,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.SelectorProvider;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Collections;
@@ -77,7 +80,7 @@ public class ServerImpl implements TimeSource {
   static final long MAX_REQ_TIME = getTimeMillis(ServerConfig.getMaxReqTime());
   static final long MAX_RSP_TIME = getTimeMillis(ServerConfig.getMaxRspTime());
   static final boolean timer1Enabled = MAX_REQ_TIME != -1 || MAX_RSP_TIME != -1;
-
+  private static final SelectorProvider DEFAULT_SELECTOR_PROVIDER = SelectorProvider.provider();
   private Timer timer, timer1;
   private final Logger logger;
   private Thread dispatcherThread;
@@ -92,7 +95,14 @@ public class ServerImpl implements TimeSource {
     https = protocol.equalsIgnoreCase("https");
     this.address = addr;
     contexts = new ContextList();
-    schan = ServerSocketChannel.open();
+    schan = DEFAULT_SELECTOR_PROVIDER.openServerSocketChannel();
+    //DEFAULT_SELECTOR_PROVIDER.openSocketChannel();
+   // DEFAULT_SELECTOR_PROVIDER.openSelector();
+  //  DEFAULT_SELECTOR_PROVIDER.openDatagramChannel();
+   // DEFAULT_SELECTOR_PROVIDER.openPipe();
+  //  DEFAULT_SELECTOR_PROVIDER.openDatagramChannel(StandardProtocolFamily.INET6);
+    //ServerSocketChannel.open();
+
     if (addr != null) {
       ServerSocket socket = schan.socket();
       socket.bind(addr, backlog);

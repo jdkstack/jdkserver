@@ -9,4 +9,9 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>jdkserver-tcp</artifactId>
+  <packaging>pom</packaging>
+  <modules>
+    <module>jdkserver-tcp-api</module>
+    <module>jdkserver-tcp-core</module>
+  </modules>
 </project>
