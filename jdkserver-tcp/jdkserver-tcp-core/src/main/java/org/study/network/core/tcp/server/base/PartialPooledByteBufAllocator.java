@@ -21,6 +21,7 @@ public final class PartialPooledByteBufAllocator implements ByteBufAllocator {
   public static final ByteBufAllocator UNPOOLED = new UnpooledByteBufAllocator(false);
   public static final PartialPooledByteBufAllocator INSTANCE = new PartialPooledByteBufAllocator();
   private static final ByteBufAllocator POOLED = new PooledByteBufAllocator(true);
+
   private PartialPooledByteBufAllocator() {}
 
   /**

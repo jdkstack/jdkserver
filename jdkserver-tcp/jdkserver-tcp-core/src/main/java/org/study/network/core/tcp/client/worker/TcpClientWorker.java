@@ -3,10 +3,6 @@ package org.study.network.core.tcp.client.worker;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.ChannelPromise;
-import io.netty.handler.flush.FlushConsolidationHandler;
-import io.netty.handler.logging.LoggingHandler;
-import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
@@ -19,17 +15,10 @@ import org.study.core.context.WorkerContext;
 import org.study.core.future.Handler;
 import org.study.network.codecs.NetworkByteToMessageDecoder;
 import org.study.network.codecs.NetworkMessageToByteEncoder;
-import org.study.network.core.common.keysore.KeystoreManager;
 import org.study.network.core.socket.NetSocket;
 import org.study.network.core.socket.NetSocketImpl;
-import org.study.network.core.tcp.client.handler.ClientHeartBeatReqHandler;
-import org.study.network.core.tcp.client.handler.ClientHeartBeatRespHandler;
-import org.study.network.core.tcp.client.handler.ClientLoginAuthReqHandler;
-import org.study.network.core.tcp.client.handler.ClientResourceScheduleHandler;
-import org.study.network.core.tcp.client.handler.ClientScheduleHandler;
 import org.study.network.core.tcp.client.handler.StudyClientHandler;
 import org.study.network.core.tcp.client.rpc.base.RpcClient;
-import org.study.network.core.tcp.client.ssl.ClientSslHandshakeHandler;
 
 /**
  * This is a class description.
@@ -41,7 +30,7 @@ import org.study.network.core.tcp.client.ssl.ClientSslHandshakeHandler;
  * @since 2021-01-20 17:29:00
  */
 public class TcpClientWorker implements Handler<Channel> {
- /** 客户端读写数据处理器. */
+  /** 客户端读写数据处理器. */
   private final Handler<NetSocket> connectionHandler;
   /** 客户端读写数据异常处理器. */
   private final Handler<Throwable> exceptionHandler;
@@ -67,11 +56,12 @@ public class TcpClientWorker implements Handler<Channel> {
   public TcpClientWorker(
       final Handler<NetSocket> connectionHandler,
       final Handler<Throwable> exceptionHandler,
-      final WorkerContext context, final RpcClient rpcClient) {
+      final WorkerContext context,
+      final RpcClient rpcClient) {
     this.connectionHandler = connectionHandler;
     this.exceptionHandler = exceptionHandler;
     this.context = context;
-    this.rpcClient=rpcClient;
+    this.rpcClient = rpcClient;
     this.trafficHandler =
         new GlobalTrafficShapingHandler(
             context.getScheduledExecutorService(), 10 * 1024 * 1024L, 20 * 1024 * 1024L, 1000L);
@@ -116,9 +106,9 @@ public class TcpClientWorker implements Handler<Channel> {
       final String s = ch.attr(serverName).get();
       final ChannelPipeline pipeline = ch.pipeline();
       // final SslHandler ssl = KeystoreManager.createClientSniHandler(h, po, d, c, s);
-      //SslHandler ssl = KeystoreManager.createClientSslHandler();
-      //ssl.setHandshakeTimeout(10, TimeUnit.HOURS);
-      //pipeline.addLast("ssl", ssl);
+      // SslHandler ssl = KeystoreManager.createClientSslHandler();
+      // ssl.setHandshakeTimeout(10, TimeUnit.HOURS);
+      // pipeline.addLast("ssl", ssl);
       /*final ChannelPromise p = ch.newPromise();
       //pipeline.addLast("ClientSslHandshakeHandler", new ClientSslHandshakeHandler(p));
       p.addListener(
@@ -132,7 +122,7 @@ public class TcpClientWorker implements Handler<Channel> {
             }
           });*/
     } catch (final Exception e) {
-     // LOG.info("Client Handler Exception:{} ", e.getMessage());
+      // LOG.info("Client Handler Exception:{} ", e.getMessage());
     }
   }
 
@@ -148,29 +138,29 @@ public class TcpClientWorker implements Handler<Channel> {
   public void handle(final Channel ch) {
     try {
       final ChannelPipeline pipeline = ch.pipeline();
-      //pipeline.addLast("GlobalTrafficShapingHandler", trafficHandler);
+      // pipeline.addLast("GlobalTrafficShapingHandler", trafficHandler);
       final ChannelTrafficShapingHandler channelTrafficShapingHandler =
           new ChannelTrafficShapingHandler(512 * 1024L, 256 * 1024L);
-      //pipeline.addLast("ChannelTrafficShapingHandler", channelTrafficShapingHandler);
+      // pipeline.addLast("ChannelTrafficShapingHandler", channelTrafficShapingHandler);
       // 客户端调度处理器,专门用来处理,调度任务.
-      //pipeline.addLast("ClientScheduleHandler", new ClientScheduleHandler(context));
+      // pipeline.addLast("ClientScheduleHandler", new ClientScheduleHandler(context));
       // 添加通用的handler.
       pipeline.addLast("ChunkedWriteHandler", new ChunkedWriteHandler());
       // 添加自定义的handler.
       pipeline.addLast("Decoder", new NetworkByteToMessageDecoder());
       pipeline.addLast("Encoder", new NetworkMessageToByteEncoder());
       // 客户端发起登陆请求,同时处理服务器端登陆响应.
-      //pipeline.addLast("LoginAuthReqHandler", new ClientLoginAuthReqHandler());
+      // pipeline.addLast("LoginAuthReqHandler", new ClientLoginAuthReqHandler());
       // 处理服务器端发来的心跳,并响应服务器端的心跳.
-      //pipeline.addLast("HeartBeatHandler", new ClientHeartBeatRespHandler());
+      // pipeline.addLast("HeartBeatHandler", new ClientHeartBeatRespHandler());
       // 当服务器端登陆成功后,向客户端发送登陆响应消息,客户端处理这个请求,客户端发起心跳请求.
-      //pipeline.addLast("HeartBeatReqHandler", new ClientHeartBeatReqHandler(context));
-      //pipeline.addLast(
-       //   "ClientResourceScheduleHandler", new ClientResourceScheduleHandler(context, rpcClient));
+      // pipeline.addLast("HeartBeatReqHandler", new ClientHeartBeatReqHandler(context));
+      // pipeline.addLast(
+      //   "ClientResourceScheduleHandler", new ClientResourceScheduleHandler(context, rpcClient));
       // 读写多少次刷新处理器handler.
-      //pipeline.addLast("flushConsolidationHandler", new FlushConsolidationHandler(1024, true));
+      // pipeline.addLast("flushConsolidationHandler", new FlushConsolidationHandler(1024, true));
       // 日志处理器handler.
-      //pipeline.addLast("logging", new LoggingHandler());
+      // pipeline.addLast("logging", new LoggingHandler());
       // 读写超时处理器handler.
       pipeline.addLast("idle", new IdleStateHandler(0, 0, 30000, TimeUnit.SECONDS));
       // 业务处理器handler.
@@ -179,7 +169,7 @@ public class TcpClientWorker implements Handler<Channel> {
       nh.addHandler(connectionHandler::handle);
       pipeline.addLast("handler", nh);
     } catch (final Exception e) {
-      //LOG.info("Client Handler Exception:{} ", e.getMessage());
+      // LOG.info("Client Handler Exception:{} ", e.getMessage());
     }
   }
 

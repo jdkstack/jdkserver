@@ -7,7 +7,6 @@ import java.security.cert.X509Certificate;
 import java.util.List;
 import javax.net.ssl.ExtendedSSLSession;
 import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.X509ExtendedKeyManager;
 

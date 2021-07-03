@@ -55,47 +55,33 @@ public interface Buffer extends ClusterSerializable, Shareable {
 
   long getUnsignedInt(int pos);
 
-
   long getUnsignedIntLE(int pos);
-
 
   long getLong(int pos);
 
-
   long getLongLE(int pos);
-
 
   double getDouble(int pos);
 
-
   float getFloat(int pos);
-
 
   short getShort(int pos);
 
-
   short getShortLE(int pos);
-
 
   int getUnsignedShort(int pos);
 
-
   int getUnsignedShortLE(int pos);
-
 
   int getMedium(int pos);
 
-
   int getMediumLE(int pos);
 
-
   int getUnsignedMedium(int pos);
-
 
   int getUnsignedMediumLE(int pos);
 
   byte[] getBytes();
-
 
   byte[] getBytes(int start, int end);
 

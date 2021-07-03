@@ -1,6 +1,5 @@
 package org.jdkstack.jdkserver.tcp.core.channel;
 
-import org.jdkstack.jdkserver.tcp.core.tcp.bridge.JdkBridgeSocketChannel;
 import org.jdkstack.jdkserver.tcp.core.tcp.client.JdkClientSocketChannel;
 import org.study.core.future.Handler;
 

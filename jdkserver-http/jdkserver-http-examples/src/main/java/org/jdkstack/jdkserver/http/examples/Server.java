@@ -28,7 +28,8 @@ public class Server {
       CertManager.initServerContext();
       HttpServerProvider httpServerProvider = HttpServerProvider.provider();
       HttpsServer httpserver =
-          httpServerProvider.createHttpsServer(new InetSocketAddress("fe80::3448:6e02:8899:6e35",443), 100);
+          httpServerProvider.createHttpsServer(
+              new InetSocketAddress("fe80::3448:6e02:8899:6e35", 443), 100);
       SSLContext sslContext1 = CertManager.sslContextMap("serverManagerFactory");
       httpserver.setHttpsConfigurator(
           new HttpsConfigurator(sslContext1) {

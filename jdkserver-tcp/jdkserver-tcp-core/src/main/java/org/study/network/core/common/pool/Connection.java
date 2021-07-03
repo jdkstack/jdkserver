@@ -1,7 +1,5 @@
 package org.study.network.core.common.pool;
 
-import org.study.network.core.common.pool.ChannelState;
-
 /**
  * This is a class description.
  *

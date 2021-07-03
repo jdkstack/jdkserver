@@ -1,38 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-
-  <groupId>org.jdkstack</groupId>
   <artifactId>jdkserver</artifactId>
-  <packaging>pom</packaging>
-  <version>11.0.1-SNAPSHOT</version>
-  <scm>
-    <connection>scm:git:git@github.com:jdkstack/jdklog.git</connection>
-    <developerConnection>scm:git:git@github.com:jdkstack/jdklog.git</developerConnection>
-    <url>git@github.com:jdkstack/jdklog.git</url>
-    <tag>jdklog-11.0.11</tag>
-  </scm>
-  <modules>
-    <module>jdkserver-http</module>
-    <module>jdkserver-tcp</module>
-    <module>jdkserver-udp</module>
-  </modules>
-  <properties>
-    <!--  1:统一字符集编码UTF-8 -->
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <!-- 默认直接读取系统参数配置的jdk版本. -->
-    <!--
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
-    <maven.compiler.compilerVersion>11</maven.compiler.compilerVersion>
-    -->
-  </properties>
-  <dependencyManagement>
-    <!--  1:统一管理依赖版本 -->
-  </dependencyManagement>
+
   <build>
     <pluginManagement>
       <!--  1:统一管理插件版本 -->
@@ -113,7 +84,7 @@
         <configuration>
           <!-- 官方规范地址: https://checkstyle.org/ -->
           <!-- 使用google规范. -->
-          <configLocation>checkstyle/google/google_checks.xml</configLocation>
+          <configLocation>style/checkstyle/google/google_checks.xml</configLocation>
           <!-- 使用sun规范. -->
           <!--<configLocation>checkstyle/sun/sun_checks.xml</configLocation>-->
           <encoding>UTF-8</encoding>
@@ -125,7 +96,7 @@
           <!-- 检测结果输出到控制台-->
           <logViolationsToConsole>true</logViolationsToConsole>
           <!-- -->
-          <suppressionsLocation>checkstyle/google/checkstyle-suppressions.xml</suppressionsLocation>
+          <suppressionsLocation>style/checkstyle/google/checkstyle-suppressions.xml</suppressionsLocation>
         </configuration>
         <dependencies>
           <dependency>
@@ -154,4 +125,33 @@
       </plugin>
     </plugins>
   </build>
+  <dependencyManagement>
+    <!--  1:统一管理依赖版本 -->
+  </dependencyManagement>
+  <groupId>org.jdkstack</groupId>
+  <modelVersion>4.0.0</modelVersion>
+  <modules>
+    <module>jdkserver-http</module>
+    <module>jdkserver-tcp</module>
+    <module>jdkserver-udp</module>
+  </modules>
+  <packaging>pom</packaging>
+  <properties>
+    <!--  1:统一字符集编码UTF-8 -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <!-- 默认直接读取系统参数配置的jdk版本. -->
+    <!--
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.compilerVersion>11</maven.compiler.compilerVersion>
+    -->
+  </properties>
+  <scm>
+    <connection>scm:git:git@github.com:jdkstack/jdklog.git</connection>
+    <developerConnection>scm:git:git@github.com:jdkstack/jdklog.git</developerConnection>
+    <tag>jdklog-11.0.11</tag>
+    <url>git@github.com:jdkstack/jdklog.git</url>
+  </scm>
+  <version>11.0.1-SNAPSHOT</version>
 </project>

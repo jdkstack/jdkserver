@@ -86,7 +86,7 @@ public class StudyThreadFactory implements ThreadFactory {
             maxExecTime,
             maxExecTimeUnit);
     if (checker != null) {
-      //LOGGER.info("注册线程{}", t);
+      // LOGGER.info("注册线程{}", t);
       checker.registerThread(t);
     }
     // 守护线程,不阻止外部调用程序的jvm退出.

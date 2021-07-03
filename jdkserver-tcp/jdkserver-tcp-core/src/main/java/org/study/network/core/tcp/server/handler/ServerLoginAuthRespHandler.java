@@ -2,17 +2,11 @@ package org.study.network.core.tcp.server.handler;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.traffic.ChannelTrafficShapingHandler;
-import io.netty.handler.traffic.GlobalTrafficShapingHandler;
-import io.netty.handler.traffic.TrafficCounter;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import org.study.network.codecs.Message;
 import org.study.network.codecs.NetworkMessage;
 import org.study.network.codecs.NetworkMessageType;
@@ -33,30 +27,30 @@ public class ServerLoginAuthRespHandler extends ChannelDuplexHandler {
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     if (msg instanceof Message) {
-    NetworkMessage message = (NetworkMessage) msg;
-    // 如果是握手请求消息，处理，其它消息透传
-    int type = message.getType();
-    if (type == NetworkMessageType.LOGIN_REQUEST.value()) {
-      InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
-      String nodeIndex = address.toString();
-      NetworkMessage loginResp;
-      // 重复登陆，拒绝
-      if (nodeCheck.containsKey(nodeIndex)) {
-        loginResp = buildResponse((byte) -1);
-      } else {
-        loginResp = buildResponse((byte) 0);
-        String ip = address.getAddress().getHostAddress();
-        boolean contains = LIST.contains(ip);
-        nodeCheck.put(nodeIndex, contains);
-      }
-      //LOG.info("The login response is :  {}  body [  {}  ]", loginResp, loginResp.getBody());
-      ctx.writeAndFlush(loginResp);
-      ctx.fireChannelRead(msg);
+      NetworkMessage message = (NetworkMessage) msg;
+      // 如果是握手请求消息，处理，其它消息透传
+      int type = message.getType();
+      if (type == NetworkMessageType.LOGIN_REQUEST.value()) {
+        InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
+        String nodeIndex = address.toString();
+        NetworkMessage loginResp;
+        // 重复登陆，拒绝
+        if (nodeCheck.containsKey(nodeIndex)) {
+          loginResp = buildResponse((byte) -1);
+        } else {
+          loginResp = buildResponse((byte) 0);
+          String ip = address.getAddress().getHostAddress();
+          boolean contains = LIST.contains(ip);
+          nodeCheck.put(nodeIndex, contains);
+        }
+        // LOG.info("The login response is :  {}  body [  {}  ]", loginResp, loginResp.getBody());
+        ctx.writeAndFlush(loginResp);
+        ctx.fireChannelRead(msg);
 
+      } else {
+        ctx.fireChannelRead(msg);
+      }
     } else {
-      ctx.fireChannelRead(msg);
-    }
-    }else {
       ctx.fireChannelRead(msg);
     }
   }
@@ -87,7 +81,7 @@ public class ServerLoginAuthRespHandler extends ChannelDuplexHandler {
     @Override
     public void run() {
       NetworkMessage heatBeat = buildHeatBeat();
-    //  LOG.info("Server send heart beat messsage to client : ---> {}", heatBeat);
+      //  LOG.info("Server send heart beat messsage to client : ---> {}", heatBeat);
       ctx.writeAndFlush(heatBeat);
     }
 

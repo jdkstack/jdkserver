@@ -5,14 +5,14 @@ import javax.net.ssl.SNIServerName;
 
 /**
  * Encapsulates the security capabilities of an SSL/TLS connection.
- * <P>
- * The security capabilities are the list of ciphersuites to be accepted in
- * an SSL/TLS handshake, the record version, the hello version, and server
- * name indication, etc., of an SSL/TLS connection.
- * <P>
- * <code>SSLCapabilities</code> can be retrieved by exploring the network
- * data of an SSL/TLS connection via {@link SSLExplorer#explore(ByteBuffer)}
- * or {@link SSLExplorer#explore(byte[], int, int)}.
+ *
+ * <p>The security capabilities are the list of ciphersuites to be accepted in an SSL/TLS handshake,
+ * the record version, the hello version, and server name indication, etc., of an SSL/TLS
+ * connection.
+ *
+ * <p><code>SSLCapabilities</code> can be retrieved by exploring the network data of an SSL/TLS
+ * connection via {@link SSLExplorer#explore(ByteBuffer)} or {@link SSLExplorer#explore(byte[], int,
+ * int)}.
  *
  * @see SSLExplorer
  */
@@ -32,13 +32,11 @@ public abstract class SSLCapabilities {
   public abstract String getHelloVersion();
 
   /**
-   * Returns a <code>List</code> containing all {@link SNIServerName}s
-   * of the server name indication.
+   * Returns a <code>List</code> containing all {@link SNIServerName}s of the server name
+   * indication.
    *
-   * @return a non-null immutable list of {@link SNIServerName}s
-   *         of the server name indication parameter, may be empty
-   *         if no server name indication.
-   *
+   * @return a non-null immutable list of {@link SNIServerName}s of the server name indication
+   *     parameter, may be empty if no server name indication.
    * @see SNIServerName
    */
   public abstract List<SNIServerName> getServerNames();

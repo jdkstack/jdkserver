@@ -21,29 +21,14 @@ import org.study.network.core.tcp.client.rpc.base.RpcClient;
 @Sharable
 public class ClientResourceScheduleHandler extends ChannelDuplexHandler {
 
-  private ScheduledFuture<?> scheduledFuture;
-
   private final WorkerContext scheduleContext;
-
   private final RpcClient rpcClient;
+  private ScheduledFuture<?> scheduledFuture;
 
   public ClientResourceScheduleHandler(
       final WorkerContext scheduleContext, final RpcClient rpcClient) {
     this.scheduleContext = scheduleContext;
     this.rpcClient = rpcClient;
-  }
-
-  private final class MonitoringTask implements Runnable {
-    private ChannelHandlerContext ctx;
-
-    public MonitoringTask(ChannelHandlerContext ctx) {
-      this.ctx = ctx;
-    }
-
-    @Override
-    public void run() {
-      //LOG.info("Client resource: ---> {}", rpcClient);
-    }
   }
 
   @Override
@@ -61,5 +46,18 @@ public class ClientResourceScheduleHandler extends ChannelDuplexHandler {
       scheduledFuture.cancel(true);
     }
     super.handlerRemoved(ctx);
+  }
+
+  private final class MonitoringTask implements Runnable {
+    private ChannelHandlerContext ctx;
+
+    public MonitoringTask(ChannelHandlerContext ctx) {
+      this.ctx = ctx;
+    }
+
+    @Override
+    public void run() {
+      // LOG.info("Client resource: ---> {}", rpcClient);
+    }
   }
 }

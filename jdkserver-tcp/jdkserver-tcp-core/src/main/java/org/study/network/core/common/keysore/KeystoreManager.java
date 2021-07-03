@@ -367,11 +367,11 @@ public class KeystoreManager {
    * @author admin
    */
   public static void parserKeystore(KeystoreOptions keystoreOptions) throws Exception {
-    String path=keystoreOptions.getKeyStorePath();
+    String path = keystoreOptions.getKeyStorePath();
     URL resource = KeystoreManager.class.getResource(path);
     String file = resource.getFile();
-   String password=keystoreOptions.getKeyStorePassword();
-    String type=keystoreOptions.getKeyStoreType();
+    String password = keystoreOptions.getKeyStorePassword();
+    String type = keystoreOptions.getKeyStoreType();
     KeyStore ks = readFile(file, password, type);
     // 所有证书的放在单个库里.
     KeyManagerFactory keyManagerFactory =
@@ -434,11 +434,11 @@ public class KeystoreManager {
    */
   public static void parserTrustKeystore(TrustKeystoreOptions trustKeystoreOptions)
       throws Exception {
-    String path=trustKeystoreOptions.getTrustKeyStorePath();
+    String path = trustKeystoreOptions.getTrustKeyStorePath();
     URL resource = KeystoreManager.class.getResource(path);
     String file = resource.getFile();
-    String password=trustKeystoreOptions.getTrustKeyStorePassword();
-    String type=trustKeystoreOptions.getTrustKeyStoreType();
+    String password = trustKeystoreOptions.getTrustKeyStorePassword();
+    String type = trustKeystoreOptions.getTrustKeyStoreType();
     KeyStore ks = readFile(file, password, type);
     TrustManagerFactory trustManagerFactory =
         TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());

@@ -1,8 +1,5 @@
 package org.jdkstack.jdkserver.tcp.core.channel;
 
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.util.concurrent.EventExecutor;
-import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -29,6 +26,5 @@ public class Examples {
     Selector selector = provider.openSelector();
     ServerSocketChannel ssc = ServerSocketChannel.open();
     SelectionKey selectionKey = ssc.register(selector, 0);
-
   }
 }

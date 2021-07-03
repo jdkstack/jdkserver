@@ -1,21 +1,15 @@
 package org.jdkstack.jdkserver.tcp.core.tcp.client;
 
-import io.netty.channel.socket.ServerSocketChannelConfig;
-import io.netty.channel.socket.SocketChannelConfig;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
-import java.util.UUID;
 import org.jdkstack.jdkserver.tcp.core.channel.AbstractJdkChannel;
 import org.jdkstack.jdkserver.tcp.core.channel.ChannelException;
 import org.jdkstack.jdkserver.tcp.core.channel.ChannelHandlerContext;
@@ -23,24 +17,18 @@ import org.jdkstack.jdkserver.tcp.core.channel.ClientChannelHandler;
 import org.jdkstack.jdkserver.tcp.core.channel.ClientChannelReadWriteHandler;
 import org.jdkstack.jdkserver.tcp.core.channel.DefaultChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.channel.JdkClientChannel;
-import org.jdkstack.jdkserver.tcp.core.channel.ServerChannelHandler;
-import org.jdkstack.jdkserver.tcp.core.channel.ServerChannelReadWriteHandler;
 import org.jdkstack.jdkserver.tcp.core.channel.codecs.NetworkByteToMessageDecoderHandler;
 import org.jdkstack.jdkserver.tcp.core.channel.codecs.NetworkMessageToByteEncoderHandler;
 import org.jdkstack.jdkserver.tcp.core.common.SocketUtils;
 import org.study.core.future.Handler;
 import org.study.network.codecs.Message;
-import org.study.network.codecs.NetworkByteToMessageDecoder;
-import org.study.network.codecs.NetworkMessage;
-import org.study.network.codecs.NetworkMessageToByteEncoder;
 
 public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkClientChannel {
   private final SocketChannel socketChannel = this.socketChannel();
   private final SelectorProvider provider = SelectorProvider.provider();
   private final Selector selector = this.openSelector();
-  private final Socket socket = this.socketChannel.socket();
   protected final SelectionKey selectionKey = this.register();
-
+  private final Socket socket = this.socketChannel.socket();
   private final NetworkMessageToByteEncoderHandler encoder =
       new NetworkMessageToByteEncoderHandler();
   private final NetworkByteToMessageDecoderHandler decoder =
@@ -50,7 +38,7 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
   protected final ChannelHandlerContext ctx =
       new DefaultChannelHandlerContext(socketChannel, clientChannelHandler);
 
-  public JdkClientSocketChannel(){
+  public JdkClientSocketChannel() {
     clientChannelHandler.setChannel(this);
   }
 
@@ -129,10 +117,12 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
       }
     }
   }
+
   public void write(Handler<Message> handler) {
     //
     ctx.setWriteHandler(handler);
   }
+
   public void read(Handler<Message> handler) {
     //
     ctx.setHandler(handler);
@@ -204,66 +194,6 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
     }
   }
 
-  public int getSendBufferSize() {
-    try {
-      return socket.getSendBufferSize();
-    } catch (SocketException e) {
-      throw new io.netty.channel.ChannelException(e);
-    }
-  }
-
-  public int getSoLinger() {
-    try {
-      return socket.getSoLinger();
-    } catch (SocketException e) {
-      throw new io.netty.channel.ChannelException(e);
-    }
-  }
-
-  public int getTrafficClass() {
-    try {
-      return socket.getTrafficClass();
-    } catch (SocketException e) {
-      throw new io.netty.channel.ChannelException(e);
-    }
-  }
-
-  public boolean isKeepAlive() {
-    try {
-      return socket.getKeepAlive();
-    } catch (SocketException e) {
-      throw new io.netty.channel.ChannelException(e);
-    }
-  }
-
-  public boolean isReuseAddress() {
-    try {
-      return socket.getReuseAddress();
-    } catch (SocketException e) {
-      throw new io.netty.channel.ChannelException(e);
-    }
-  }
-
-  public boolean isTcpNoDelay() {
-    try {
-      return socket.getTcpNoDelay();
-    } catch (SocketException e) {
-      throw new io.netty.channel.ChannelException(e);
-    }
-  }
-
-  public void setKeepAlive(boolean keepAlive) {
-    try {
-      socket.setKeepAlive(keepAlive);
-    } catch (SocketException e) {
-      throw new io.netty.channel.ChannelException(e);
-    }
-  }
-
-  public void setPerformancePreferences(int connectionTime, int latency, int bandwidth) {
-    socket.setPerformancePreferences(connectionTime, latency, bandwidth);
-  }
-
   public void setReceiveBufferSize(int receiveBufferSize) {
     try {
       socket.setReceiveBufferSize(receiveBufferSize);
@@ -272,9 +202,9 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
     }
   }
 
-  public void setReuseAddress(boolean reuseAddress) {
+  public int getSendBufferSize() {
     try {
-      socket.setReuseAddress(reuseAddress);
+      return socket.getSendBufferSize();
     } catch (SocketException e) {
       throw new io.netty.channel.ChannelException(e);
     }
@@ -283,6 +213,14 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
   public void setSendBufferSize(int sendBufferSize) {
     try {
       socket.setSendBufferSize(sendBufferSize);
+    } catch (SocketException e) {
+      throw new io.netty.channel.ChannelException(e);
+    }
+  }
+
+  public int getSoLinger() {
+    try {
+      return socket.getSoLinger();
     } catch (SocketException e) {
       throw new io.netty.channel.ChannelException(e);
     }
@@ -300,9 +238,9 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
     }
   }
 
-  public void setTcpNoDelay(boolean tcpNoDelay) {
+  public int getTrafficClass() {
     try {
-      socket.setTcpNoDelay(tcpNoDelay);
+      return socket.getTrafficClass();
     } catch (SocketException e) {
       throw new io.netty.channel.ChannelException(e);
     }
@@ -314,6 +252,58 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
     } catch (SocketException e) {
       throw new io.netty.channel.ChannelException(e);
     }
+  }
+
+  public boolean isKeepAlive() {
+    try {
+      return socket.getKeepAlive();
+    } catch (SocketException e) {
+      throw new io.netty.channel.ChannelException(e);
+    }
+  }
+
+  public void setKeepAlive(boolean keepAlive) {
+    try {
+      socket.setKeepAlive(keepAlive);
+    } catch (SocketException e) {
+      throw new io.netty.channel.ChannelException(e);
+    }
+  }
+
+  public boolean isReuseAddress() {
+    try {
+      return socket.getReuseAddress();
+    } catch (SocketException e) {
+      throw new io.netty.channel.ChannelException(e);
+    }
+  }
+
+  public void setReuseAddress(boolean reuseAddress) {
+    try {
+      socket.setReuseAddress(reuseAddress);
+    } catch (SocketException e) {
+      throw new io.netty.channel.ChannelException(e);
+    }
+  }
+
+  public boolean isTcpNoDelay() {
+    try {
+      return socket.getTcpNoDelay();
+    } catch (SocketException e) {
+      throw new io.netty.channel.ChannelException(e);
+    }
+  }
+
+  public void setTcpNoDelay(boolean tcpNoDelay) {
+    try {
+      socket.setTcpNoDelay(tcpNoDelay);
+    } catch (SocketException e) {
+      throw new io.netty.channel.ChannelException(e);
+    }
+  }
+
+  public void setPerformancePreferences(int connectionTime, int latency, int bandwidth) {
+    socket.setPerformancePreferences(connectionTime, latency, bandwidth);
   }
 
   public int select(int ms) throws IOException {

@@ -1,12 +1,10 @@
 package org.jdkstack.jdkserver.tcp.core;
 
 import java.nio.channels.SelectionKey;
-import org.jdkstack.jdkserver.tcp.core.channel.queue.MessageQueue;
 import org.jdkstack.jdkserver.tcp.core.channel.queue.ProducerWorker;
 import org.jdkstack.jdkserver.tcp.core.channel.queue.SelectionKeyQueue;
 import org.jdkstack.jdkserver.tcp.core.channel.queue.StudyQueue;
 import org.jdkstack.jdkserver.tcp.core.channel.queue.StudyWorker;
-import org.jdkstack.jdkserver.tcp.core.tcp.server.JdkServerSocketChannelWorker;
 
 /**
  * This is a method description.
@@ -17,12 +15,11 @@ import org.jdkstack.jdkserver.tcp.core.tcp.server.JdkServerSocketChannelWorker;
  */
 public class JdkServerSocketChannelMessageHandler extends AbstractHandler {
   /** . */
-  private Runnable consumerRunnable;
-  /** . */
   private final StudyQueue<SelectionKey> fileQueue;
-
   /** 生产日志处理器. */
   private final StudyWorker<SelectionKey> producerWorker;
+  /** . */
+  private Runnable consumerRunnable;
 
   /**
    * This is a method description.

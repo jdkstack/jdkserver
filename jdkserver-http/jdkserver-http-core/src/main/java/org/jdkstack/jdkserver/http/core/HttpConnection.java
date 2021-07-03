@@ -10,166 +10,171 @@ import java.nio.channels.SocketChannel;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
-
 /**
- * encapsulates all the connection specific state for a HTTP/S connection
- * one of these is hung from the selector attachment and is used to locate
- * everything from that.
+ * encapsulates all the connection specific state for a HTTP/S connection one of these is hung from
+ * the selector attachment and is used to locate everything from that.
  */
 class HttpConnection {
 
-    HttpContextImpl context;
-    SSLEngine engine;
-    SSLContext sslContext;
-    SSLStreams sslStreams;
+  HttpContextImpl context;
+  SSLEngine engine;
+  SSLContext sslContext;
+  SSLStreams sslStreams;
 
-    /* high level streams returned to application */
-    InputStream i;
+  /* high level streams returned to application */
+  InputStream i;
 
-    /* low level stream that sits directly over channel */
-    InputStream raw;
-    OutputStream rawout;
+  /* low level stream that sits directly over channel */
+  InputStream raw;
+  OutputStream rawout;
 
-    SocketChannel chan;
-    SelectionKey selectionKey;
-    String protocol;
-    long time;
-    volatile long creationTime; // time this connection was created
-    volatile long rspStartedTime; // time we started writing the response
-    int remaining;
-    boolean closed = false;
-    Logger logger;
+  SocketChannel chan;
+  SelectionKey selectionKey;
+  String protocol;
+  long time;
+  volatile long creationTime; // time this connection was created
+  volatile long rspStartedTime; // time we started writing the response
+  int remaining;
+  boolean closed = false;
+  Logger logger;
+  volatile State state;;
 
-    public enum State {IDLE, REQUEST, RESPONSE};
-    volatile State state;
+  HttpConnection() {}
 
-    public String toString() {
-        String s = null;
-        if (chan != null) {
-            s = chan.toString();
-        }
-        return s;
+  public String toString() {
+    String s = null;
+    if (chan != null) {
+      s = chan.toString();
+    }
+    return s;
+  }
+
+  void setContext(HttpContextImpl ctx) {
+    context = ctx;
+  }
+
+  State getState() {
+    return state;
+  }
+
+  void setState(State s) {
+    state = s;
+  }
+
+  void setParameters(
+      InputStream in,
+      OutputStream rawout,
+      SocketChannel chan,
+      SSLEngine engine,
+      SSLStreams sslStreams,
+      SSLContext sslContext,
+      String protocol,
+      HttpContextImpl context,
+      InputStream raw) {
+    this.context = context;
+    this.i = in;
+    this.rawout = rawout;
+    this.raw = raw;
+    this.protocol = protocol;
+    this.engine = engine;
+    this.chan = chan;
+    this.sslContext = sslContext;
+    this.sslStreams = sslStreams;
+    this.logger = context.getLogger();
+  }
+
+  SocketChannel getChannel() {
+    return chan;
+  }
+
+  void setChannel(SocketChannel c) {
+    chan = c;
+  }
+
+  synchronized void close() {
+    if (closed) {
+      return;
+    }
+    closed = true;
+    if (logger != null && chan != null) {
+      logger.log(Level.TRACE, "Closing connection: " + chan.toString());
     }
 
-    HttpConnection () {
+    if (!chan.isOpen()) {
+      ServerImpl.dprint("Channel already closed");
+      return;
     }
-
-    void setChannel (SocketChannel c) {
-        chan = c;
+    try {
+      /* need to ensure temporary selectors are closed */
+      if (raw != null) {
+        raw.close();
+      }
+    } catch (IOException e) {
+      ServerImpl.dprint(e);
     }
-
-    void setContext (HttpContextImpl ctx) {
-        context = ctx;
+    try {
+      if (rawout != null) {
+        rawout.close();
+      }
+    } catch (IOException e) {
+      ServerImpl.dprint(e);
     }
-
-    State getState() {
-        return state;
+    try {
+      if (sslStreams != null) {
+        sslStreams.close();
+      }
+    } catch (IOException e) {
+      ServerImpl.dprint(e);
     }
-
-    void setState (State s) {
-        state = s;
+    try {
+      chan.close();
+    } catch (IOException e) {
+      ServerImpl.dprint(e);
     }
+  }
 
-    void setParameters (
-        InputStream in, OutputStream rawout, SocketChannel chan,
-        SSLEngine engine, SSLStreams sslStreams, SSLContext sslContext, String protocol,
-        HttpContextImpl context, InputStream raw
-    )
-    {
-        this.context = context;
-        this.i = in;
-        this.rawout = rawout;
-        this.raw = raw;
-        this.protocol = protocol;
-        this.engine = engine;
-        this.chan = chan;
-        this.sslContext = sslContext;
-        this.sslStreams = sslStreams;
-        this.logger = context.getLogger();
-    }
+  int getRemaining() {
+    return remaining;
+  }
 
-    SocketChannel getChannel () {
-        return chan;
-    }
+  /* remaining is the number of bytes left on the lowest level inputstream
+   * after the exchange is finished
+   */
+  void setRemaining(int r) {
+    remaining = r;
+  }
 
-    synchronized void close () {
-        if (closed) {
-            return;
-        }
-        closed = true;
-        if (logger != null && chan != null) {
-            logger.log (Level.TRACE, "Closing connection: " + chan.toString());
-        }
+  SelectionKey getSelectionKey() {
+    return selectionKey;
+  }
 
-        if (!chan.isOpen()) {
-            ServerImpl.dprint ("Channel already closed");
-            return;
-        }
-        try {
-            /* need to ensure temporary selectors are closed */
-            if (raw != null) {
-                raw.close();
-            }
-        } catch (IOException e) {
-            ServerImpl.dprint (e);
-        }
-        try {
-            if (rawout != null) {
-                rawout.close();
-            }
-        } catch (IOException e) {
-            ServerImpl.dprint (e);
-        }
-        try {
-            if (sslStreams != null) {
-                sslStreams.close();
-            }
-        } catch (IOException e) {
-            ServerImpl.dprint (e);
-        }
-        try {
-            chan.close();
-        } catch (IOException e) {
-            ServerImpl.dprint (e);
-        }
-    }
+  InputStream getInputStream() {
+    return i;
+  }
 
-    /* remaining is the number of bytes left on the lowest level inputstream
-     * after the exchange is finished
-     */
-    void setRemaining (int r) {
-        remaining = r;
-    }
+  OutputStream getRawOutputStream() {
+    return rawout;
+  }
 
-    int getRemaining () {
-        return remaining;
-    }
+  String getProtocol() {
+    return protocol;
+  }
 
-    SelectionKey getSelectionKey () {
-        return selectionKey;
-    }
+  SSLEngine getSSLEngine() {
+    return engine;
+  }
 
-    InputStream getInputStream () {
-            return i;
-    }
+  SSLContext getSSLContext() {
+    return sslContext;
+  }
 
-    OutputStream getRawOutputStream () {
-            return rawout;
-    }
+  HttpContextImpl getHttpContext() {
+    return context;
+  }
 
-    String getProtocol () {
-            return protocol;
-    }
-
-    SSLEngine getSSLEngine () {
-            return engine;
-    }
-
-    SSLContext getSSLContext () {
-            return sslContext;
-    }
-
-    HttpContextImpl getHttpContext () {
-            return context;
-    }
+public enum State {
+    IDLE,
+    REQUEST,
+    RESPONSE
+  }
 }

@@ -6,7 +6,6 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.EventExecutor;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import org.study.core.future.Handler;
 import org.study.network.codecs.Message;

@@ -14,6 +14,8 @@ import java.util.Map;
  */
 public abstract class AbstractMessage implements Message {
   /** CRC校验码. */
+  private final Map<String, Object> attachments = new HashMap<>(16);
+  /** CRC校验码. */
   private int crcCode = 0xabef0101;
   /** CRC校验码. */
   private int length;
@@ -31,8 +33,6 @@ public abstract class AbstractMessage implements Message {
   private String body;
   /** CRC校验码. */
   private String customMsg = "{}";
-  /** CRC校验码. */
-  private final Map<String, Object> attachments = new HashMap<>(16);
 
   @Override
   public long getCreateTime() {

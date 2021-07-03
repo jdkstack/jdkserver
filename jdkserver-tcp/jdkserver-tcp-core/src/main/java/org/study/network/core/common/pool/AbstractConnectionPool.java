@@ -1,6 +1,5 @@
 package org.study.network.core.common.pool;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -16,6 +15,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @SuppressWarnings({"java:S1068"})
 public abstract class AbstractConnectionPool implements ConnectionPool {
   /** . */
+  protected final List<Connection> connections = new CopyOnWriteArrayList<>();
+  /** . */
   protected int minPoolSize = 1;
   /** . */
   protected int maxPoolSize = 100;
@@ -26,14 +27,11 @@ public abstract class AbstractConnectionPool implements ConnectionPool {
   /** . */
   protected ConnectionSelectStrategy connectionSelectStrategy =
       new DefaultConnectionSelectStrategy();
-  /** . */
-  protected final List<Connection> connections = new CopyOnWriteArrayList<>();
 
-  public AbstractConnectionPool(){
+  public AbstractConnectionPool() {}
 
-  }
-  public AbstractConnectionPool(ConnectionSelectStrategy strategy){
-    this.connectionSelectStrategy=strategy;
+  public AbstractConnectionPool(ConnectionSelectStrategy strategy) {
+    this.connectionSelectStrategy = strategy;
   }
 
   @Override

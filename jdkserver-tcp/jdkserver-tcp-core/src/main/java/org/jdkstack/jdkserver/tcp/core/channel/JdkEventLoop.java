@@ -5,7 +5,6 @@ import io.netty.channel.EventLoopException;
 import io.netty.channel.EventLoopTaskQueueFactory;
 import io.netty.channel.SelectStrategy;
 import io.netty.channel.nio.AbstractNioChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.nio.NioTask;
 import io.netty.util.IntSupplier;
 import io.netty.util.concurrent.RejectedExecutionHandler;
@@ -39,14 +38,8 @@ public class JdkEventLoop extends SingleThreadEventLoop {
 
   private static final int MIN_PREMATURE_SELECTOR_RETURNS = 3;
   private static final int SELECTOR_AUTO_REBUILD_THRESHOLD;
-
-  private final IntSupplier selectNowSupplier =
-      new IntSupplier() {
-        @Override
-        public int get() throws Exception {
-          return selectNow();
-        }
-      };
+  private static final long AWAKE = -1L;
+  private static final long NONE = Long.MAX_VALUE;
 
   // Workaround for JDK NIO bug.
   //
@@ -80,23 +73,23 @@ public class JdkEventLoop extends SingleThreadEventLoop {
     SELECTOR_AUTO_REBUILD_THRESHOLD = selectorAutoRebuildThreshold;
   }
 
-  /** The NIO {@link Selector}. */
-  private Selector selector;
-
-  private Selector unwrappedSelector;
-  private SelectedSelectionKeySet selectedKeys;
-
-  private SelectorProvider provider;
-
-  private static final long AWAKE = -1L;
-  private static final long NONE = Long.MAX_VALUE;
-
   // nextWakeupNanos is:
   //    AWAKE            when EL is awake
   //    NONE             when EL is waiting with no wakeup scheduled
   //    other value T    when EL is waiting with wakeup scheduled at time T
   private final AtomicLong nextWakeupNanos = new AtomicLong(AWAKE);
-
+  /** The NIO {@link Selector}. */
+  private Selector selector;
+  private final IntSupplier selectNowSupplier =
+      new IntSupplier() {
+        @Override
+        public int get() throws Exception {
+          return selectNow();
+        }
+      };
+  private Selector unwrappedSelector;
+  private SelectedSelectionKeySet selectedKeys;
+  private SelectorProvider provider;
   private SelectStrategy selectStrategy;
 
   private volatile int ioRatio = 50;
@@ -131,18 +124,55 @@ public class JdkEventLoop extends SingleThreadEventLoop {
     return queueFactory.newTaskQueue(DEFAULT_MAX_PENDING_TASKS);
   }
 
-  private static final class SelectorTuple {
-    final Selector unwrappedSelector;
-    final Selector selector;
+  private static Queue<Runnable> newTaskQueue0(int maxPendingTasks) {
+    // This event loop never calls takeTask()
+    return maxPendingTasks == Integer.MAX_VALUE
+        ? PlatformDependent.<Runnable>newMpscQueue()
+        : PlatformDependent.<Runnable>newMpscQueue(maxPendingTasks);
+  }
 
-    SelectorTuple(Selector unwrappedSelector) {
-      this.unwrappedSelector = unwrappedSelector;
-      this.selector = unwrappedSelector;
+  private static void handleLoopException(Throwable t) {
+    // logger.warn("Unexpected exception in the selector loop.", t);
+
+    // Prevent possible consecutive immediate failures that lead to
+    // excessive CPU consumption.
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+      // Ignore.
     }
+  }
 
-    SelectorTuple(Selector unwrappedSelector, Selector selector) {
-      this.unwrappedSelector = unwrappedSelector;
-      this.selector = selector;
+  private static void processSelectedKey(SelectionKey k, NioTask<SelectableChannel> task) {
+    int state = 0;
+    try {
+      task.channelReady(k.channel(), k);
+      state = 1;
+    } catch (Exception e) {
+      k.cancel();
+      invokeChannelUnregistered(task, k, e);
+      state = 2;
+    } finally {
+      switch (state) {
+        case 0:
+          k.cancel();
+          invokeChannelUnregistered(task, k, null);
+          break;
+        case 1:
+          if (!k.isValid()) { // Cancelled by channelReady()
+            invokeChannelUnregistered(task, k, null);
+          }
+          break;
+      }
+    }
+  }
+
+  private static void invokeChannelUnregistered(
+      NioTask<SelectableChannel> task, SelectionKey k, Throwable cause) {
+    try {
+      task.channelUnregistered(k.channel(), cause);
+    } catch (Exception e) {
+      // logger.warn("Unexpected exception while running NioTask.channelUnregistered()", e);
     }
   }
 
@@ -259,13 +289,6 @@ public class JdkEventLoop extends SingleThreadEventLoop {
   @Override
   protected Queue<Runnable> newTaskQueue(int maxPendingTasks) {
     return newTaskQueue0(maxPendingTasks);
-  }
-
-  private static Queue<Runnable> newTaskQueue0(int maxPendingTasks) {
-    // This event loop never calls takeTask()
-    return maxPendingTasks == Integer.MAX_VALUE
-        ? PlatformDependent.<Runnable>newMpscQueue()
-        : PlatformDependent.<Runnable>newMpscQueue(maxPendingTasks);
   }
 
   /**
@@ -392,7 +415,7 @@ public class JdkEventLoop extends SingleThreadEventLoop {
             key.channel().register(newSelectorTuple.unwrappedSelector, interestOps, a);
         if (a instanceof AbstractNioChannel) {
           // Update SelectionKey
-         // ((AbstractNioChannel) a).selectionKey = newKey;
+          // ((AbstractNioChannel) a).selectionKey = newKey;
         }
         nChannels++;
       } catch (Exception e) {
@@ -489,7 +512,7 @@ public class JdkEventLoop extends SingleThreadEventLoop {
         }
 
         if (ranTasks || strategy > 0) {
-          if (selectCnt > MIN_PREMATURE_SELECTOR_RETURNS ) {}
+          if (selectCnt > MIN_PREMATURE_SELECTOR_RETURNS) {}
 
           selectCnt = 0;
         } else if (unexpectedSelectorWakeup(selectCnt)) { // Unexpected wakeup (unusual case)
@@ -531,18 +554,6 @@ public class JdkEventLoop extends SingleThreadEventLoop {
       return true;
     }
     return false;
-  }
-
-  private static void handleLoopException(Throwable t) {
-    // logger.warn("Unexpected exception in the selector loop.", t);
-
-    // Prevent possible consecutive immediate failures that lead to
-    // excessive CPU consumption.
-    try {
-      Thread.sleep(1000);
-    } catch (InterruptedException e) {
-      // Ignore.
-    }
   }
 
   private void processSelectedKeys() {
@@ -698,30 +709,6 @@ public class JdkEventLoop extends SingleThreadEventLoop {
     }
   }
 
-  private static void processSelectedKey(SelectionKey k, NioTask<SelectableChannel> task) {
-    int state = 0;
-    try {
-      task.channelReady(k.channel(), k);
-      state = 1;
-    } catch (Exception e) {
-      k.cancel();
-      invokeChannelUnregistered(task, k, e);
-      state = 2;
-    } finally {
-      switch (state) {
-        case 0:
-          k.cancel();
-          invokeChannelUnregistered(task, k, null);
-          break;
-        case 1:
-          if (!k.isValid()) { // Cancelled by channelReady()
-            invokeChannelUnregistered(task, k, null);
-          }
-          break;
-      }
-    }
-  }
-
   private void closeAll() {
     selectAgain();
     Set<SelectionKey> keys = selector.keys();
@@ -740,15 +727,6 @@ public class JdkEventLoop extends SingleThreadEventLoop {
 
     for (AbstractNioChannel ch : channels) {
       ch.unsafe().close(ch.unsafe().voidPromise());
-    }
-  }
-
-  private static void invokeChannelUnregistered(
-      NioTask<SelectableChannel> task, SelectionKey k, Throwable cause) {
-    try {
-      task.channelUnregistered(k.channel(), cause);
-    } catch (Exception e) {
-      // logger.warn("Unexpected exception while running NioTask.channelUnregistered()", e);
     }
   }
 
@@ -794,6 +772,21 @@ public class JdkEventLoop extends SingleThreadEventLoop {
       selector.selectNow();
     } catch (Throwable t) {
       // logger.warn("Failed to update SelectionKeys.", t);
+    }
+  }
+
+  private static final class SelectorTuple {
+    final Selector unwrappedSelector;
+    final Selector selector;
+
+    SelectorTuple(Selector unwrappedSelector) {
+      this.unwrappedSelector = unwrappedSelector;
+      this.selector = unwrappedSelector;
+    }
+
+    SelectorTuple(Selector unwrappedSelector, Selector selector) {
+      this.unwrappedSelector = unwrappedSelector;
+      this.selector = selector;
     }
   }
 }

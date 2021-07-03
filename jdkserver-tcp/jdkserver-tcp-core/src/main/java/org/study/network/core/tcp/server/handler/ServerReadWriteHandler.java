@@ -34,7 +34,7 @@ public class ServerReadWriteHandler implements Handler<NetSocket> {
           msg1.setBody("我是服务器端哦嘻");
           msg1.setLength(19999);
           connection.writeNetworkMessage(msg1);
-          System.out.println("I received some bytes: "+ object);
+          System.out.println("I received some bytes: " + object);
         });
     connection.exceptionHandler(e -> System.out.println(e.getMessage()));
   }

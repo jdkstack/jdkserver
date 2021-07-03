@@ -5,7 +5,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.util.ResourceLeakDetector;
-import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Log4J2LoggerFactory;
 import java.util.ArrayList;
@@ -56,8 +55,6 @@ import org.study.network.core.tool.RemotingUtil;
  * @since 2021-03-03 15:23:00
  */
 public abstract class AbstractRpcServer implements RpcServer {
-  /** . */
-  private static final Logger LOG = LogManager.getLogger(AbstractRpcServer.class);
   /** 用来存储服务器端的所有资源. */
   protected static final ServerResourceManager SERVER_RESOURCE_MANAGER =
       new ServerResourceManager();
@@ -88,6 +85,8 @@ public abstract class AbstractRpcServer implements RpcServer {
   /** 工作任务上下文. */
   protected static final WorkerContext context =
       new WorkerStudyContextImpl(executorService, scheduledExecutorService);
+  /** . */
+  private static final Logger LOG = LogManager.getLogger(AbstractRpcServer.class);
 
   static {
     // 使用Netty自身的日志.
@@ -159,7 +158,7 @@ public abstract class AbstractRpcServer implements RpcServer {
     Handler<NetSocket> connectionHandler = new ServerReadWriteHandler();
     Handler<Throwable> exceptionHandler = new ServerExceptionHandler();
     TcpServerWorker tcpServerWorker =
-        new TcpServerWorker(connectionHandler, exceptionHandler, context,this);
+        new TcpServerWorker(connectionHandler, exceptionHandler, context, this);
     TcpServerOptions tcpServerOptions = new TcpServerOptions();
     TcpServer tcpServer = new TcpServerImpl(tcpServerOptions);
     int workerCount = 10;
@@ -192,6 +191,7 @@ public abstract class AbstractRpcServer implements RpcServer {
    * This is a method description.
    *
    * <p>Another description after blank line.
+   *
    * @author admin
    */
   @Override
@@ -203,10 +203,9 @@ public abstract class AbstractRpcServer implements RpcServer {
    * This is a method description.
    *
    * <p>Another description after blank line.
+   *
    * @author admin
    */
   @Override
-  public void shutdown(){
-
-  }
+  public void shutdown() {}
 }

@@ -39,8 +39,8 @@ import org.study.network.core.common.pool.AbstractConnectionPool;
 import org.study.network.core.common.pool.Connection;
 import org.study.network.core.common.pool.ConnectionPool;
 import org.study.network.core.socket.NetSocket;
-import org.study.network.core.tcp.client.base.TcpClientImpl;
 import org.study.network.core.tcp.client.base.ConnectionEventType;
+import org.study.network.core.tcp.client.base.TcpClientImpl;
 import org.study.network.core.tcp.client.handler.ClientExceptionHandler;
 import org.study.network.core.tcp.client.handler.ClientReadWriteHandler;
 import org.study.network.core.tcp.client.initializer.ClientLoadBalanceChannelInitializer;
@@ -51,7 +51,6 @@ import org.study.network.core.tcp.client.option.TcpClientOptions;
 import org.study.network.core.tcp.client.pool.TcpClientConnection;
 import org.study.network.core.tcp.client.rpc.base.RpcClient;
 import org.study.network.core.tcp.client.worker.TcpClientWorker;
-import org.study.network.core.tcp.server.rpc.AbstractRpcServer;
 import org.study.network.core.tool.RemotingUtil;
 
 /**
@@ -64,8 +63,6 @@ import org.study.network.core.tool.RemotingUtil;
  * @since 2021-03-03 15:26:00
  */
 public abstract class AbstractRpcClient implements RpcClient {
-  /** . */
-  private static final Logger LOG = LogManager.getLogger(AbstractRpcClient.class);
   /** . */
   protected static final ClientResourceManager CLIENT_RESOURCE_MANAGER =
       new ClientResourceManager();
@@ -93,6 +90,8 @@ public abstract class AbstractRpcClient implements RpcClient {
   /** . */
   protected static final WorkerContext CONTEXT =
       new WorkerStudyContextImpl(EXECUTOR_SERVICE, SCHEDULED_EXECUTOR_SERVICE);
+  /** . */
+  private static final Logger LOG = LogManager.getLogger(AbstractRpcClient.class);
 
   static {
     // 使用Netty自身的日志.

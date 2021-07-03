@@ -13,20 +13,18 @@ import java.util.concurrent.atomic.AtomicLong;
  * @version 2021-01-22 13:30
  * @since 2021-01-22 13:30:00
  */
-@SuppressWarnings({
-    "java:S1068"
-})
+@SuppressWarnings({"java:S1068"})
 public abstract class AbstractConnection implements Connection {
   /** . */
   private final AtomicInteger referenceCount = new AtomicInteger(0);
   /** . */
-  private Channel channel;
-  /** . */
-  private ChannelState channelState;
-  /** . */
   private final AtomicLong pingCount = new AtomicLong(0L);
   /** . */
   private final AtomicLong pongCount = new AtomicLong(0L);
+  /** . */
+  private Channel channel;
+  /** . */
+  private ChannelState channelState;
 
   /**
    * This is a method description.
@@ -86,7 +84,6 @@ public abstract class AbstractConnection implements Connection {
   public void decrease() {
     this.referenceCount.getAndDecrement();
   }
-
 
   public Channel getChannel() {
     return channel;

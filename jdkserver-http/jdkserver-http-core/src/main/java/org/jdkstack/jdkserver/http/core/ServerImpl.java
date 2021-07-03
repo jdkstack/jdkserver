@@ -8,9 +8,7 @@ import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.net.BindException;
 import java.net.InetSocketAddress;
-import java.net.ProtocolFamily;
 import java.net.ServerSocket;
-import java.net.StandardProtocolFamily;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.CancelledKeyException;
@@ -44,6 +42,17 @@ import org.jdkstack.jdkserver.http.core.standard.Headers;
 /** Provides implementation for both HTTP and HTTPS */
 public class ServerImpl implements TimeSource {
 
+  static final int CLOCK_TICK = ServerConfig.getClockTick();
+  static final long IDLE_INTERVAL = ServerConfig.getIdleInterval();
+  static final int MAX_IDLE_CONNECTIONS = ServerConfig.getMaxIdleConnections();
+  static final long TIMER_MILLIS = ServerConfig.getTimerMillis();
+  static final long MAX_REQ_TIME = getTimeMillis(ServerConfig.getMaxReqTime());
+  static final long MAX_RSP_TIME = getTimeMillis(ServerConfig.getMaxRspTime());
+  static final boolean timer1Enabled = MAX_REQ_TIME != -1 || MAX_RSP_TIME != -1;
+  private static final SelectorProvider DEFAULT_SELECTOR_PROVIDER = SelectorProvider.provider();
+  static boolean debug = ServerConfig.debugEnabled();
+  private final Logger logger;
+  Dispatcher dispatcher;
   private String protocol;
   private boolean https;
   private Executor executor;
@@ -72,18 +81,9 @@ public class ServerImpl implements TimeSource {
   private volatile long subticks = 0;
   private volatile long ticks; /* number of clock ticks since server started */
   private HttpServer wrapper;
-
-  static final int CLOCK_TICK = ServerConfig.getClockTick();
-  static final long IDLE_INTERVAL = ServerConfig.getIdleInterval();
-  static final int MAX_IDLE_CONNECTIONS = ServerConfig.getMaxIdleConnections();
-  static final long TIMER_MILLIS = ServerConfig.getTimerMillis();
-  static final long MAX_REQ_TIME = getTimeMillis(ServerConfig.getMaxReqTime());
-  static final long MAX_RSP_TIME = getTimeMillis(ServerConfig.getMaxRspTime());
-  static final boolean timer1Enabled = MAX_REQ_TIME != -1 || MAX_RSP_TIME != -1;
-  private static final SelectorProvider DEFAULT_SELECTOR_PROVIDER = SelectorProvider.provider();
   private Timer timer, timer1;
-  private final Logger logger;
   private Thread dispatcherThread;
+  private int exchangeCount = 0;
 
   ServerImpl(HttpServer wrapper, String protocol, InetSocketAddress addr, int backlog)
       throws IOException {
@@ -96,12 +96,12 @@ public class ServerImpl implements TimeSource {
     this.address = addr;
     contexts = new ContextList();
     schan = DEFAULT_SELECTOR_PROVIDER.openServerSocketChannel();
-    //DEFAULT_SELECTOR_PROVIDER.openSocketChannel();
-   // DEFAULT_SELECTOR_PROVIDER.openSelector();
-  //  DEFAULT_SELECTOR_PROVIDER.openDatagramChannel();
-   // DEFAULT_SELECTOR_PROVIDER.openPipe();
-  //  DEFAULT_SELECTOR_PROVIDER.openDatagramChannel(StandardProtocolFamily.INET6);
-    //ServerSocketChannel.open();
+    // DEFAULT_SELECTOR_PROVIDER.openSocketChannel();
+    // DEFAULT_SELECTOR_PROVIDER.openSelector();
+    //  DEFAULT_SELECTOR_PROVIDER.openDatagramChannel();
+    // DEFAULT_SELECTOR_PROVIDER.openPipe();
+    //  DEFAULT_SELECTOR_PROVIDER.openDatagramChannel(StandardProtocolFamily.INET6);
+    // ServerSocketChannel.open();
 
     if (addr != null) {
       ServerSocket socket = schan.socket();
@@ -130,6 +130,27 @@ public class ServerImpl implements TimeSource {
     logger.log(Level.DEBUG, "HttpServer created " + protocol + " " + addr);
   }
 
+  static synchronized void dprint(String s) {
+    if (debug) {
+      System.out.println(s);
+    }
+  }
+
+  static synchronized void dprint(Exception e) {
+    if (debug) {
+      System.out.println(e);
+      e.printStackTrace();
+    }
+  }
+
+  static long getTimeMillis(long secs) {
+    if (secs == -1) {
+      return -1;
+    } else {
+      return secs * 1000;
+    }
+  }
+
   public void bind(InetSocketAddress addr, int backlog) throws IOException {
     if (bound) {
       throw new BindException("HttpServer already bound");
@@ -154,6 +175,10 @@ public class ServerImpl implements TimeSource {
     dispatcherThread.start();
   }
 
+  public Executor getExecutor() {
+    return executor;
+  }
+
   public void setExecutor(Executor executor) {
     if (started) {
       throw new IllegalStateException("server already started");
@@ -161,14 +186,8 @@ public class ServerImpl implements TimeSource {
     this.executor = executor;
   }
 
-  private static class DefaultExecutor implements Executor {
-    public void execute(Runnable task) {
-      task.run();
-    }
-  }
-
-  public Executor getExecutor() {
-    return executor;
+  public HttpsConfigurator getHttpsConfigurator() {
+    return httpsConfig;
   }
 
   public void setHttpsConfigurator(HttpsConfigurator config) {
@@ -180,10 +199,6 @@ public class ServerImpl implements TimeSource {
     }
     this.httpsConfig = config;
     sslContext = config.getSSLContext();
-  }
-
-  public HttpsConfigurator getHttpsConfigurator() {
-    return httpsConfig;
   }
 
   public final boolean isFinishing() {
@@ -230,8 +245,6 @@ public class ServerImpl implements TimeSource {
     }
   }
 
-  Dispatcher dispatcher;
-
   public synchronized HttpContextImpl createContext(String path, HttpHandler handler) {
     if (handler == null || path == null) {
       throw new NullPointerException("null handler, or path parameter");
@@ -259,6 +272,8 @@ public class ServerImpl implements TimeSource {
     contexts.remove(protocol, path);
     logger.log(Level.DEBUG, "context removed: " + path);
   }
+
+  /* main server listener task */
 
   public synchronized void removeContext(HttpContext context) throws IllegalArgumentException {
     if (!(context instanceof HttpContextImpl)) {
@@ -288,9 +303,127 @@ public class ServerImpl implements TimeSource {
     }
   }
 
-  /* main server listener task */
+  Logger getLogger() {
+    return logger;
+  }
+
+  private void closeConnection(HttpConnection conn) {
+    conn.close();
+    allConnections.remove(conn);
+    switch (conn.getState()) {
+      case REQUEST:
+        reqConnections.remove(conn);
+        break;
+      case RESPONSE:
+        rspConnections.remove(conn);
+        break;
+      case IDLE:
+        idleConnections.remove(conn);
+        break;
+    }
+    assert !reqConnections.remove(conn);
+    assert !rspConnections.remove(conn);
+    assert !idleConnections.remove(conn);
+  }
+
+  /* per exchange task */
+
+  void logReply(int code, String requestStr, String text) {
+    if (!logger.isLoggable(Level.DEBUG)) {
+      return;
+    }
+    if (text == null) {
+      text = "";
+    }
+    String r;
+    if (requestStr.length() > 80) {
+      r = requestStr.substring(0, 80) + "<TRUNCATED>";
+    } else {
+      r = requestStr;
+    }
+    String message = r + " [" + code + " " + Code.msg(code) + "] (" + text + ")";
+    logger.log(Level.DEBUG, message);
+  }
+
+  long getTicks() {
+    return ticks;
+  }
+
+  public long getTime() {
+    return time;
+  }
+
+  void delay() {
+    Thread.yield();
+    try {
+      Thread.sleep(200);
+    } catch (InterruptedException e) {
+    }
+  }
+
+  synchronized void startExchange() {
+    exchangeCount++;
+  }
+
+  synchronized int endExchange() {
+    exchangeCount--;
+    assert exchangeCount >= 0;
+    return exchangeCount;
+  }
+
+  HttpServer getWrapper() {
+    return wrapper;
+  }
+
+  void requestStarted(HttpConnection c) {
+    c.creationTime = getTime();
+    c.setState(State.REQUEST);
+    reqConnections.add(c);
+  }
+
+  void requestCompleted(HttpConnection c) {
+    State s = c.getState();
+    assert s == State.REQUEST : "State is not REQUEST (" + s + ")";
+    reqConnections.remove(c);
+    c.rspStartedTime = getTime();
+    rspConnections.add(c);
+    c.setState(State.RESPONSE);
+  }
+
+  // called after response has been sent
+  void responseCompleted(HttpConnection c) {
+    State s = c.getState();
+    assert s == State.RESPONSE : "State is not RESPONSE (" + s + ")";
+    rspConnections.remove(c);
+    c.setState(State.IDLE);
+  }
+
+  // called after a request has been completely read
+  // by the server. This stops the timer which would
+  // close the connection if the request doesn't arrive
+  // quickly enough. It then starts the timer
+  // that ensures the client reads the response in a timely
+  // fashion.
+
+  void logStackTrace(String s) {
+    logger.log(Level.TRACE, s);
+    StringBuilder b = new StringBuilder();
+    StackTraceElement[] e = Thread.currentThread().getStackTrace();
+    for (int i = 0; i < e.length; i++) {
+      b.append(e[i].toString()).append("\n");
+    }
+    logger.log(Level.TRACE, b.toString());
+  }
+
+  private static class DefaultExecutor implements Executor {
+    public void execute(Runnable task) {
+      task.run();
+    }
+  }
 
   class Dispatcher implements Runnable {
+
+    final LinkedList<HttpConnection> connsToRegister = new LinkedList<HttpConnection>();
 
     private void handleEvent(Event r) {
       ExchangeImpl t = r.exchange;
@@ -325,8 +458,6 @@ public class ServerImpl implements TimeSource {
         c.close();
       }
     }
-
-    final LinkedList<HttpConnection> connsToRegister = new LinkedList<HttpConnection>();
 
     void reRegister(HttpConnection c) {
       /* re-register with selector */
@@ -457,46 +588,6 @@ public class ServerImpl implements TimeSource {
       }
     }
   }
-
-  static boolean debug = ServerConfig.debugEnabled();
-
-  static synchronized void dprint(String s) {
-    if (debug) {
-      System.out.println(s);
-    }
-  }
-
-  static synchronized void dprint(Exception e) {
-    if (debug) {
-      System.out.println(e);
-      e.printStackTrace();
-    }
-  }
-
-  Logger getLogger() {
-    return logger;
-  }
-
-  private void closeConnection(HttpConnection conn) {
-    conn.close();
-    allConnections.remove(conn);
-    switch (conn.getState()) {
-      case REQUEST:
-        reqConnections.remove(conn);
-        break;
-      case RESPONSE:
-        rspConnections.remove(conn);
-        break;
-      case IDLE:
-        idleConnections.remove(conn);
-        break;
-    }
-    assert !reqConnections.remove(conn);
-    assert !rspConnections.remove(conn);
-    assert !idleConnections.remove(conn);
-  }
-
-  /* per exchange task */
 
   class ExchangeTask implements Runnable {
     SocketChannel chan;
@@ -668,18 +759,6 @@ public class ServerImpl implements TimeSource {
 
     /* used to link to 2 or more Filter.Chains together */
 
-    public class LinkHandler implements HttpHandler {
-      Filter.Chain nextChain;
-
-      public LinkHandler(Filter.Chain nextChain) {
-        this.nextChain = nextChain;
-      }
-
-      public void handle(Exchange exchange) throws IOException {
-        nextChain.doFilter(exchange);
-      }
-    }
-
     void reject(int code, String requestStr, String message) {
       rejected = true;
       logReply(code, requestStr, message);
@@ -718,85 +797,18 @@ public class ServerImpl implements TimeSource {
         closeConnection(connection);
       }
     }
-  }
 
-  void logReply(int code, String requestStr, String text) {
-    if (!logger.isLoggable(Level.DEBUG)) {
-      return;
+    public class LinkHandler implements HttpHandler {
+      Filter.Chain nextChain;
+
+      public LinkHandler(Filter.Chain nextChain) {
+        this.nextChain = nextChain;
+      }
+
+      public void handle(Exchange exchange) throws IOException {
+        nextChain.doFilter(exchange);
+      }
     }
-    if (text == null) {
-      text = "";
-    }
-    String r;
-    if (requestStr.length() > 80) {
-      r = requestStr.substring(0, 80) + "<TRUNCATED>";
-    } else {
-      r = requestStr;
-    }
-    String message = r + " [" + code + " " + Code.msg(code) + "] (" + text + ")";
-    logger.log(Level.DEBUG, message);
-  }
-
-  long getTicks() {
-    return ticks;
-  }
-
-  public long getTime() {
-    return time;
-  }
-
-  void delay() {
-    Thread.yield();
-    try {
-      Thread.sleep(200);
-    } catch (InterruptedException e) {
-    }
-  }
-
-  private int exchangeCount = 0;
-
-  synchronized void startExchange() {
-    exchangeCount++;
-  }
-
-  synchronized int endExchange() {
-    exchangeCount--;
-    assert exchangeCount >= 0;
-    return exchangeCount;
-  }
-
-  HttpServer getWrapper() {
-    return wrapper;
-  }
-
-  void requestStarted(HttpConnection c) {
-    c.creationTime = getTime();
-    c.setState(State.REQUEST);
-    reqConnections.add(c);
-  }
-
-  // called after a request has been completely read
-  // by the server. This stops the timer which would
-  // close the connection if the request doesn't arrive
-  // quickly enough. It then starts the timer
-  // that ensures the client reads the response in a timely
-  // fashion.
-
-  void requestCompleted(HttpConnection c) {
-    State s = c.getState();
-    assert s == State.REQUEST : "State is not REQUEST (" + s + ")";
-    reqConnections.remove(c);
-    c.rspStartedTime = getTime();
-    rspConnections.add(c);
-    c.setState(State.RESPONSE);
-  }
-
-  // called after response has been sent
-  void responseCompleted(HttpConnection c) {
-    State s = c.getState();
-    assert s == State.RESPONSE : "State is not RESPONSE (" + s + ")";
-    rspConnections.remove(c);
-    c.setState(State.IDLE);
   }
 
   /** TimerTask run every CLOCK_TICK ms */
@@ -857,24 +869,6 @@ public class ServerImpl implements TimeSource {
           }
         }
       }
-    }
-  }
-
-  void logStackTrace(String s) {
-    logger.log(Level.TRACE, s);
-    StringBuilder b = new StringBuilder();
-    StackTraceElement[] e = Thread.currentThread().getStackTrace();
-    for (int i = 0; i < e.length; i++) {
-      b.append(e[i].toString()).append("\n");
-    }
-    logger.log(Level.TRACE, b.toString());
-  }
-
-  static long getTimeMillis(long secs) {
-    if (secs == -1) {
-      return -1;
-    } else {
-      return secs * 1000;
     }
   }
 }

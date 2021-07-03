@@ -19,13 +19,12 @@ import org.study.core.future.Handler;
  */
 public class ClientLoadBalanceChannelInitializer extends ChannelInitializer<Channel> {
 
+  private final LoadBalanceWorkerEventLoopGroup workers;
+  private final ConcurrentMap<EventLoop, WorkerList> workerMap = new ConcurrentHashMap<>();
   private int remotePort;
   private String remoteHost;
   private String clientName;
   private String serverName;
-
-  private final LoadBalanceWorkerEventLoopGroup workers;
-  private final ConcurrentMap<EventLoop, WorkerList> workerMap = new ConcurrentHashMap<>();
   private volatile boolean hasHandlers;
 
   public ClientLoadBalanceChannelInitializer() {

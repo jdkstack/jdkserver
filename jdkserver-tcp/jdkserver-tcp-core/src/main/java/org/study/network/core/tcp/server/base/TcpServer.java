@@ -15,7 +15,8 @@ import org.study.network.core.tcp.server.initializer.ServerLoadBalanceChannelIni
  */
 public interface TcpServer {
 
-  void initTcpServer(ServerLoadBalanceChannelInitializer channelBalance, EventLoopGroup eventLoopGroup);
+  void initTcpServer(
+      ServerLoadBalanceChannelInitializer channelBalance, EventLoopGroup eventLoopGroup);
 
   ChannelFuture listenServer(int port, String host);
 }

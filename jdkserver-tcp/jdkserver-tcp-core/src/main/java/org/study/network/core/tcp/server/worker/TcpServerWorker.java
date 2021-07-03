@@ -3,13 +3,8 @@ package org.study.network.core.tcp.server.worker;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.ChannelPromise;
-import io.netty.handler.flush.FlushConsolidationHandler;
-import io.netty.handler.logging.LoggingHandler;
-import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.IdleStateHandler;
-import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import io.netty.handler.traffic.GlobalTrafficShapingHandler;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -18,20 +13,14 @@ import org.study.core.context.WorkerContext;
 import org.study.core.future.Handler;
 import org.study.network.codecs.NetworkByteToMessageDecoder;
 import org.study.network.codecs.NetworkMessageToByteEncoder;
-import org.study.network.core.common.keysore.KeystoreManager;
 import org.study.network.core.common.pool.Connection;
 import org.study.network.core.socket.NetSocket;
 import org.study.network.core.socket.NetSocketImpl;
 import org.study.network.core.tcp.client.pool.TcpClientConnection;
-import org.study.network.core.tcp.server.handler.ServerHeartBeatReqHandler;
-import org.study.network.core.tcp.server.handler.ServerHeartBeatRespHandler;
 import org.study.network.core.tcp.server.handler.ServerLoginAuthRespHandler;
-import org.study.network.core.tcp.server.handler.ServerResourceScheduleHandler;
-import org.study.network.core.tcp.server.handler.ServerScheduleHandler;
 import org.study.network.core.tcp.server.handler.StudyServerHandler;
 import org.study.network.core.tcp.server.manager.ServerConnectionPoolManager;
 import org.study.network.core.tcp.server.rpc.base.RpcServer;
-import org.study.network.core.tcp.server.ssl.ServerSslHandshakeHandler;
 import org.study.network.core.tool.RemotingUtil;
 
 /**
@@ -72,7 +61,7 @@ public class TcpServerWorker implements Handler<Channel> {
     this.connectionHandler = connectionHandler;
     this.exceptionHandler = exceptionHandler;
     this.context = context;
-    this.rpcServer=rpcServer;
+    this.rpcServer = rpcServer;
     this.trafficHandler =
         new GlobalTrafficShapingHandler(
             context.getScheduledExecutorService(), 10 * 1024 * 1024L, 20 * 1024 * 1024L);
@@ -108,9 +97,9 @@ public class TcpServerWorker implements Handler<Channel> {
       // 创建服务器端的SNI处理器.
       // final SniHandler sni = KeystoreManager.createServerSniHandler("www.server2.com");
       // pipeline.addLast("sni", sni);
-      //final SslHandler ssl = KeystoreManager.createServerSslHandler();
-      //ssl.setHandshakeTimeout(10, TimeUnit.HOURS);
-      //pipeline.addLast("ssl", ssl);
+      // final SslHandler ssl = KeystoreManager.createServerSslHandler();
+      // ssl.setHandshakeTimeout(10, TimeUnit.HOURS);
+      // pipeline.addLast("ssl", ssl);
       this.handleSuccess(ch.pipeline());
       // 异步Promise.
       /*final ChannelPromise p = ch.newPromise();
@@ -129,7 +118,7 @@ public class TcpServerWorker implements Handler<Channel> {
             }
           });*/
     } catch (final Exception e) {
-      //LOG.info("Server Handler Exception:{} ", e.getMessage());
+      // LOG.info("Server Handler Exception:{} ", e.getMessage());
     }
   }
 
@@ -147,13 +136,13 @@ public class TcpServerWorker implements Handler<Channel> {
       final int write = 0;
       final int allIdleTime = 30000;
       // 整个server的流量限制.
-      //pipeline.addLast("GlobalTrafficShapingHandler", trafficHandler);
+      // pipeline.addLast("GlobalTrafficShapingHandler", trafficHandler);
       // 单个channel的流量限制.
-      //pipeline.addLast(
+      // pipeline.addLast(
       //    "ChannelTrafficShapingHandler",
       //    new ChannelTrafficShapingHandler(1024 * 1024L, 2 * 1024 * 1024L));
       // 服务端调度处理器,专门用来处理,调度任务.
-      //pipeline.addLast("ServerScheduleHandler", new ServerScheduleHandler(context));
+      // pipeline.addLast("ServerScheduleHandler", new ServerScheduleHandler(context));
       // 添加通用的handler.
       pipeline.addLast("ChunkedWriteHandler", new ChunkedWriteHandler());
       // 添加自定义的解码器.
@@ -163,15 +152,15 @@ public class TcpServerWorker implements Handler<Channel> {
       // 添加登陆响应处理器.
       pipeline.addLast("LoginAuthRespHandler", new ServerLoginAuthRespHandler());
       // 添加心跳响应处理器.
-      //pipeline.addLast("HeartBeatRespHandler", new ServerHeartBeatRespHandler());
+      // pipeline.addLast("HeartBeatRespHandler", new ServerHeartBeatRespHandler());
       // 添加心跳请求处理器.
-      //pipeline.addLast("HeartBeatHandler", new ServerHeartBeatReqHandler(context));
-      //pipeline.addLast(
+      // pipeline.addLast("HeartBeatHandler", new ServerHeartBeatReqHandler(context));
+      // pipeline.addLast(
       //    "ServerResourceScheduleHandler", new ServerResourceScheduleHandler(context, rpcServer));
       // 刷新处理器,读写数据多少次时才Flush一次.
-      //pipeline.addLast("flush", new FlushConsolidationHandler(flush, true));
+      // pipeline.addLast("flush", new FlushConsolidationHandler(flush, true));
       // 日志处理器.
-      //pipeline.addLast("logging", new LoggingHandler());
+      // pipeline.addLast("logging", new LoggingHandler());
       // 读写超时处理器.
       pipeline.addLast("idle", new IdleStateHandler(read, write, allIdleTime, TimeUnit.SECONDS));
       // 业务处理器.
@@ -180,7 +169,7 @@ public class TcpServerWorker implements Handler<Channel> {
       nh.addHandler(connectionHandler::handle);
       pipeline.addLast("handler", nh);
     } catch (final Exception e) {
-      //LOG.info("Server Handler Exception:{} ", e.getMessage());
+      // LOG.info("Server Handler Exception:{} ", e.getMessage());
     }
   }
 
@@ -198,7 +187,7 @@ public class TcpServerWorker implements Handler<Channel> {
     final String[] split = s.split(":");
     final Connection connection = new TcpClientConnection(ch);
     serverConnectionPoolManager.createTcpClientConnection(split[0], connection);
-    //LOG.info("Server Connection Pool Manager:{} ", connection);
+    // LOG.info("Server Connection Pool Manager:{} ", connection);
   }
 
   /**

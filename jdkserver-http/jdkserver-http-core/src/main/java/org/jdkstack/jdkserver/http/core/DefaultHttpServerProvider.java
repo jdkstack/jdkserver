@@ -7,11 +7,11 @@ import org.jdkstack.jdkserver.http.core.service.HttpsServer;
 import org.jdkstack.jdkserver.http.core.spi.HttpServerProvider;
 
 public class DefaultHttpServerProvider extends HttpServerProvider {
-    public HttpServer createHttpServer (InetSocketAddress addr, int backlog) throws IOException {
-        return new HttpServerImpl(addr, backlog);
-    }
+  public HttpServer createHttpServer(InetSocketAddress addr, int backlog) throws IOException {
+    return new HttpServerImpl(addr, backlog);
+  }
 
-    public HttpsServer createHttpsServer (InetSocketAddress addr, int backlog) throws IOException {
-        return new HttpsServerImpl(addr, backlog);
-    }
+  public HttpsServer createHttpsServer(InetSocketAddress addr, int backlog) throws IOException {
+    return new HttpsServerImpl(addr, backlog);
+  }
 }

@@ -1,21 +1,28 @@
 package org.jdkstack.jdkserver.tcp.core.tcp.client;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
 import java.util.Iterator;
 import java.util.Set;
 import org.jdkstack.jdkserver.tcp.core.channel.JdkClientChannel;
-import org.jdkstack.jdkserver.tcp.core.channel.JdkServerChannel;
-import org.jdkstack.jdkserver.tcp.core.common.SocketUtils;
-import org.jdkstack.jdkserver.tcp.core.tcp.bridge.JdkBridgeChannel;
 
 public class JdkClientSocketChannelWorker implements Runnable {
   private final JdkClientSocketChannel clientSocketChannel;
 
   public JdkClientSocketChannelWorker(JdkClientSocketChannel clientSocketChannel) {
     this.clientSocketChannel = clientSocketChannel;
+  }
+
+  public static void main(String[] args) throws Exception {
+    SocketAddress remoteAddress = new InetSocketAddress("127.0.0.1", 20000);
+    SocketAddress localAddress = new InetSocketAddress("127.0.0.1", 18000);
+    JdkClientSocketChannel jdkClientSocketChannel = new JdkClientSocketChannel();
+    JdkClientSocketChannelWorker jdkClientSocketChannelWorker =
+        new JdkClientSocketChannelWorker(jdkClientSocketChannel);
+    jdkClientSocketChannelWorker.connectEvent();
+    jdkClientSocketChannelWorker.connect(remoteAddress, localAddress);
+    jdkClientSocketChannelWorker.run();
   }
 
   @Override
@@ -100,17 +107,6 @@ public class JdkClientSocketChannelWorker implements Runnable {
   public void connect(final SocketAddress remoteAddress, final SocketAddress localAddress)
       throws Exception {
     this.clientSocketChannel.connect(remoteAddress, localAddress);
-  }
-
-  public static void main(String[] args) throws Exception {
-    SocketAddress remoteAddress = new InetSocketAddress("127.0.0.1", 20000);
-    SocketAddress localAddress = new InetSocketAddress("127.0.0.1", 18000);
-    JdkClientSocketChannel jdkClientSocketChannel = new JdkClientSocketChannel();
-    JdkClientSocketChannelWorker jdkClientSocketChannelWorker =
-        new JdkClientSocketChannelWorker(jdkClientSocketChannel);
-    jdkClientSocketChannelWorker.connectEvent();
-    jdkClientSocketChannelWorker.connect(remoteAddress, localAddress);
-    jdkClientSocketChannelWorker.run();
   }
 
   private void connectEvent() {

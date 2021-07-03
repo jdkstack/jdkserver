@@ -20,12 +20,12 @@ import org.jdkstack.jdklog.logging.admin.lifecycle.module.AbstractModuleLifecycl
  * @author admin
  */
 public class PluginServiceLifecycle extends AbstractModuleLifecycle implements PluginService {
+  /** 扫描具体插件目录下的所有的jar文件,例如:/bank/*.jar */
+  private static final String fileExtension = "*.jar";
   /** 用来保存正常的插件信息(成功的) */
   protected static Map<String, PluginEntity> pluginEntitys = new ConcurrentHashMap<>();
   /** 用来保存不正常的插件信息(失败的) */
   protected static Map<String, PluginEntity> abnormalPluginEntitys = new ConcurrentHashMap<>();
-  /** 扫描具体插件目录下的所有的jar文件,例如:/bank/*.jar */
-  private static final String fileExtension = "*.jar";
   /** /{服务的home目录,从System中获取}/plugin/{插件的类型目录,例如:rest}/{具体插件的目录,例如:bank} */
   private final Path pluginParentDir;
 

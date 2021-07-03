@@ -33,8 +33,7 @@ public final class Constants {
   /** . */
   public static final String FILTER = "org.jdklog.logging.filter.StudyJuliFilter";
   /** . */
-  public static final String FORMATTER_NAME =
-      "org.jdklog.logging.handler.ConsoleHandler.formatter";
+  public static final String FORMATTER_NAME = "org.jdklog.logging.handler.ConsoleHandler.formatter";
   /** . */
   public static final String CONFIG_FILE = "org.jdklog.logging.config.file";
   /** . */

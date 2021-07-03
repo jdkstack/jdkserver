@@ -1,5 +1,3 @@
 package org.jdkstack.jdkserver.tcp.core.tcp.server;
 
-public class JdkServerSocketChannelBootstrap {
-
-}
+public class JdkServerSocketChannelBootstrap {}

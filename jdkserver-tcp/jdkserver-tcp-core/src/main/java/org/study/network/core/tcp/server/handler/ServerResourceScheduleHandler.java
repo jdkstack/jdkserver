@@ -24,30 +24,14 @@ import org.study.network.core.tcp.server.rpc.base.RpcServer;
 public class ServerResourceScheduleHandler extends ChannelDuplexHandler {
   /** . */
   private static final Logger LOG = LogManager.getLogger(ServerResourceScheduleHandler.class);
-
-  private ScheduledFuture<?> scheduledFuture;
-
   private final WorkerContext scheduleContext;
-
   private final RpcServer rpcServer;
+  private ScheduledFuture<?> scheduledFuture;
 
   public ServerResourceScheduleHandler(
       final WorkerContext scheduleContext, final RpcServer rpcServer) {
     this.scheduleContext = scheduleContext;
     this.rpcServer = rpcServer;
-  }
-
-  private final class MonitoringTask implements Runnable {
-    private ChannelHandlerContext ctx;
-
-    public MonitoringTask(ChannelHandlerContext ctx) {
-      this.ctx = ctx;
-    }
-
-    @Override
-    public void run() {
-      LOG.info("Server resource: ---> {}", rpcServer.getServerResourceManager());
-    }
   }
 
   @Override
@@ -65,5 +49,18 @@ public class ServerResourceScheduleHandler extends ChannelDuplexHandler {
       scheduledFuture.cancel(true);
     }
     super.handlerRemoved(ctx);
+  }
+
+  private final class MonitoringTask implements Runnable {
+    private ChannelHandlerContext ctx;
+
+    public MonitoringTask(ChannelHandlerContext ctx) {
+      this.ctx = ctx;
+    }
+
+    @Override
+    public void run() {
+      LOG.info("Server resource: ---> {}", rpcServer.getServerResourceManager());
+    }
   }
 }

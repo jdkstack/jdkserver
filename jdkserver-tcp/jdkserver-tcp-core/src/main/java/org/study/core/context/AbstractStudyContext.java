@@ -38,7 +38,6 @@ public abstract class AbstractStudyContext implements StudyContext {
     }
   }
 
-
   public void beginDispatch() {
     StudyThread th = (StudyThread) Thread.currentThread();
     th.beginEmission(this);

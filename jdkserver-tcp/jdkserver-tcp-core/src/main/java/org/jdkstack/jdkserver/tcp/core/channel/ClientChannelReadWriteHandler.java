@@ -1,10 +1,7 @@
 package org.jdkstack.jdkserver.tcp.core.channel;
 
-import java.util.UUID;
-import org.jdkstack.jdkserver.tcp.core.tcp.bridge.JdkBridgeSocketChannel;
 import org.jdkstack.jdkserver.tcp.core.tcp.client.JdkClientSocketChannel;
 import org.study.core.future.Handler;
-import org.study.network.codecs.NetworkMessage;
 
 /**
  * This is a class description.

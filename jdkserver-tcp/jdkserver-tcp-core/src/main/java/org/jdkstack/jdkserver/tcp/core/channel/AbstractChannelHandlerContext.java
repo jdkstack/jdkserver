@@ -1,6 +1,5 @@
 package org.jdkstack.jdkserver.tcp.core.channel;
 
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import org.jdkstack.jdkserver.tcp.core.channel.buffer.ChannelOutboundBuffer;
 import org.study.core.future.Handler;
@@ -16,6 +15,11 @@ public abstract class AbstractChannelHandlerContext implements ChannelHandlerCon
   protected Handler<Message> handler;
   protected Handler<Message> setWriteHandler;
 
+  public AbstractChannelHandlerContext(SocketChannel socketChannel, ChannelHandler channelHandler) {
+    this.socketChannel = socketChannel;
+    this.channelHandler = channelHandler;
+  }
+
   @Override
   public void setHandler(Handler<Message> handler) {
     this.handler = handler;
@@ -24,10 +28,5 @@ public abstract class AbstractChannelHandlerContext implements ChannelHandlerCon
   @Override
   public void setWriteHandler(Handler<Message> setWriteHandler) {
     this.setWriteHandler = setWriteHandler;
-  }
-
-  public AbstractChannelHandlerContext(SocketChannel socketChannel, ChannelHandler channelHandler) {
-    this.socketChannel = socketChannel;
-    this.channelHandler = channelHandler;
   }
 }

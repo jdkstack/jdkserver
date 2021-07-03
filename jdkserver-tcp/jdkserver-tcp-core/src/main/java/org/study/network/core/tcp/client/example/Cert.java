@@ -77,12 +77,13 @@ public class Cert {
   private static final Map<String, TrustManagerFactory> trustMgrMap = new HashMap<>();
   private static final Map<Certificate, SslContext> sslContextMap = new ConcurrentHashMap<>();
   private static final String type = "PKCS12";
+
   public static SslHandler getSsl() throws Exception {
     List<String> crlPaths = new ArrayList<>(16);
     List<String> crlValues = new ArrayList<>(16);
     Path target =
         new File(
-            "F:\\study\\study-backend-manage\\study-backend-manage-jaas\\target\\classes\\serverP12")
+                "F:\\study\\study-backend-manage\\study-backend-manage-jaas\\target\\classes\\serverP12")
             .toPath();
     byte[] bytes = Files.readAllBytes(target);
     KeyStore ks = KeyStore.getInstance(type);
@@ -97,7 +98,7 @@ public class Cert {
     KeyStore ksKey = KeyStore.getInstance(type);
     Path target_t =
         new File(
-            "F:\\study\\study-backend-manage\\study-backend-manage-jaas\\target\\classes\\serverP12-t")
+                "F:\\study\\study-backend-manage\\study-backend-manage-jaas\\target\\classes\\serverP12-t")
             .toPath();
     byte[] bytesKey = Files.readAllBytes(target_t);
     try (InputStream inKey = new ByteArrayInputStream(bytesKey)) {
@@ -108,7 +109,6 @@ public class Cert {
     TrustManagerFactory trustMgrFactory =
         TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
     trustMgrFactory.init(ksKey);
-
 
     Collection<String> suite = new ArrayList<>(16);
     SslContextBuilder builder = SslContextBuilder.forServer(keyFact);
@@ -413,7 +413,7 @@ public class Cert {
     List<String> strings = new ArrayList<>();
     strings.addAll(Arrays.asList(engine.getSupportedProtocols()));
     if (strings.isEmpty()) {
-      //LOG.info("no SSL/TLS protocols are enabled due to configuration restrictions.");
+      // LOG.info("no SSL/TLS protocols are enabled due to configuration restrictions.");
     }
     engine.setEnabledProtocols(strings.toArray(new String[strings.size()]));
     engine.setNeedClientAuth(true);

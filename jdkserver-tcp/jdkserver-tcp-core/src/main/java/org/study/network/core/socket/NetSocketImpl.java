@@ -14,7 +14,6 @@ import io.netty.util.concurrent.FutureListener;
 import java.nio.charset.Charset;
 import java.util.UUID;
 import org.study.core.context.WorkerContext;
-import org.study.core.context.WorkerStudyContextImpl;
 import org.study.core.future.AsyncResult;
 import org.study.core.future.Handler;
 import org.study.core.future.StudyFuture;
@@ -111,8 +110,7 @@ public class NetSocketImpl extends ConnectionBase implements NetSocketInternal {
 
   @Override
   public NetSocketInternal writeMessage(Object message, Handler<AsyncResult<Void>> handler) {
-    writeToChannel(message, (FutureListener) future -> {
-    });
+    writeToChannel(message, (FutureListener) future -> {});
     return this;
   }
 
@@ -471,17 +469,17 @@ public class NetSocketImpl extends ConnectionBase implements NetSocketInternal {
     private final Handler<Object> dataHandlerHAProxyMessage;
     private final ByteBufAllocator allocator;
 
-    DataObjectHandler(
-        ByteBufAllocator allocator, Handler<Object> dataHandlerHAProxyMessage) {
+    DataObjectHandler(ByteBufAllocator allocator, Handler<Object> dataHandlerHAProxyMessage) {
       this.allocator = allocator;
       this.dataHandlerHAProxyMessage = dataHandlerHAProxyMessage;
     }
 
     @Override
     public void handle(Object event) {
-        dataHandlerHAProxyMessage.handle(event);
+      dataHandlerHAProxyMessage.handle(event);
     }
   }
+
   private class DataHAProxyMessageHandler implements Handler<Object> {
 
     private final Handler<HAProxyMessage> dataHandlerHAProxyMessage;

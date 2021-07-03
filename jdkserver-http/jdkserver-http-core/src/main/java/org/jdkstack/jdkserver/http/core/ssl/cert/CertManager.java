@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -36,7 +35,6 @@ import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SNIHostName;
-import javax.net.ssl.SNIMatcher;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLParameters;
@@ -46,15 +44,11 @@ import org.jdkstack.jdkserver.http.api.Context;
 import org.jdkstack.jdkserver.http.api.Exchange;
 import org.jdkstack.jdkserver.http.api.Header;
 import org.jdkstack.jdkserver.http.api.HttpHandler;
-import org.jdkstack.jdkserver.http.core.HttpsConfigurator;
-import org.jdkstack.jdkserver.http.core.HttpsParameters;
 import org.jdkstack.jdkserver.http.core.PrivateKeyParser;
 import org.jdkstack.jdkserver.http.core.SslContextBuilder;
 import org.jdkstack.jdkserver.http.core.StudyX509KeyManager;
 import org.jdkstack.jdkserver.http.core.option.KeystoreOptions;
 import org.jdkstack.jdkserver.http.core.option.TrustKeystoreOptions;
-import org.jdkstack.jdkserver.http.core.service.HttpsServer;
-import org.jdkstack.jdkserver.http.core.spi.HttpServerProvider;
 
 /**
  * 实现SSL.
@@ -638,7 +632,7 @@ public class CertManager {
         OutputStream responseBody = exchange.getResponseBody();
         responseBody.write(bytes);
         responseBody.flush();
-        //https://github.com/eclipse/jetty.project/issues/236
+        // https://github.com/eclipse/jetty.project/issues/236
         // javax.net.ssl.SSLException: closing inbound before receiving peer's close_no
         responseBody.close();
       }

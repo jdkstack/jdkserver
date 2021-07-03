@@ -19,30 +19,11 @@ import org.study.core.context.WorkerContext;
  * @since 2021-02-27 18:20:00
  */
 public class ServerScheduleHandler extends ChannelDuplexHandler {
-  private ScheduledFuture<?> scheduledFuture;
-
   private final WorkerContext scheduleContext;
+  private ScheduledFuture<?> scheduledFuture;
 
   public ServerScheduleHandler(final WorkerContext scheduleContext) {
     this.scheduleContext = scheduleContext;
-  }
-
-  private static final class TrafficMonitoringTask implements Runnable {
-    private final ChannelHandlerContext ctx;
-
-    public TrafficMonitoringTask(final ChannelHandlerContext ctx) {
-      this.ctx = ctx;
-    }
-
-    @Override
-    public void run() {
-      GlobalTrafficShapingHandler globalTrafficShapingHandler =
-          (GlobalTrafficShapingHandler) ctx.pipeline().get("GlobalTrafficShapingHandler");
-      //LOG.info("server global Traffic Shaping: ---> {}", globalTrafficShapingHandler);
-      ChannelTrafficShapingHandler channelTrafficShapingHandler =
-          (ChannelTrafficShapingHandler) ctx.pipeline().get("ChannelTrafficShapingHandler");
-      //LOG.info("server channel Traffic Shaping: ---> {}", channelTrafficShapingHandler);
-    }
   }
 
   @Override
@@ -60,5 +41,23 @@ public class ServerScheduleHandler extends ChannelDuplexHandler {
       scheduledFuture.cancel(true);
     }
     super.handlerRemoved(ctx);
+  }
+
+  private static final class TrafficMonitoringTask implements Runnable {
+    private final ChannelHandlerContext ctx;
+
+    public TrafficMonitoringTask(final ChannelHandlerContext ctx) {
+      this.ctx = ctx;
+    }
+
+    @Override
+    public void run() {
+      GlobalTrafficShapingHandler globalTrafficShapingHandler =
+          (GlobalTrafficShapingHandler) ctx.pipeline().get("GlobalTrafficShapingHandler");
+      // LOG.info("server global Traffic Shaping: ---> {}", globalTrafficShapingHandler);
+      ChannelTrafficShapingHandler channelTrafficShapingHandler =
+          (ChannelTrafficShapingHandler) ctx.pipeline().get("ChannelTrafficShapingHandler");
+      // LOG.info("server channel Traffic Shaping: ---> {}", channelTrafficShapingHandler);
+    }
   }
 }

@@ -77,7 +77,8 @@ public abstract class AbstractTcpServerBase implements TcpServer {
         .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
         .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
     bootstrap.option(ChannelOption.SO_BACKLOG, networkOptions.getAcceptBacklog());
-    bootstrap.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(32 * 1024, 64 * 1024));
+    bootstrap.childOption(
+        ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(32 * 1024, 64 * 1024));
     boolean domainSocket = networkOptions.isDomainSocket();
     if (domainSocket) {
       bootstrap.channelFactory(serverChannelFactory(true));

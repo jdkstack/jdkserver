@@ -26,7 +26,8 @@ public interface RpcServer {
    * This is a method description.
    *
    * <p>Another description after blank line.
-   * @return  ServerResourceManager.
+   *
+   * @return ServerResourceManager.
    * @author admin
    */
   ServerResourceManager getServerResourceManager();

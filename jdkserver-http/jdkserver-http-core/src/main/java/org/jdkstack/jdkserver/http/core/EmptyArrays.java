@@ -30,8 +30,7 @@ public class EmptyArrays {
 
   private EmptyArrays() {}
 
-  public static void main(String[] args)
-      throws Exception {
+  public static void main(String[] args) throws Exception {
     System.setProperty("javax.net.debug", "all");
     SSLContext sc = SSLContext.getInstance("TLS");
     // 实现一个X509TrustManager接口，用于绕过验证，不用修改里面的方法
@@ -52,8 +51,8 @@ public class EmptyArrays {
             return null;
           }
         };
-    //取消主机名验证
-    System.setProperty("jdk.internal.httpclient.disableHostnameVerification","true");
+    // 取消主机名验证
+    System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
     sc.init(null, new TrustManager[] {trustManager}, null);
     HttpClient client = HttpClient.newBuilder().version(Version.HTTP_2).sslContext(sc).build();
 

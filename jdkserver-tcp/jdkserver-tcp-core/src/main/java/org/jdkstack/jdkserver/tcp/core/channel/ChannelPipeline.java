@@ -1,9 +1,7 @@
 package org.jdkstack.jdkserver.tcp.core.channel;
 
-import io.netty.util.concurrent.EventExecutorGroup;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 public interface ChannelPipeline {
 
@@ -22,7 +20,6 @@ public interface ChannelPipeline {
   <T extends ChannelHandler> T remove(Class<T> handlerType);
 
   ChannelHandler removeFirst();
-
 
   ChannelHandler removeLast();
 

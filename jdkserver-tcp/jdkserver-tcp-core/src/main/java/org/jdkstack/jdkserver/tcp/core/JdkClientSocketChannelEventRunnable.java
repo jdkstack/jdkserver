@@ -1,7 +1,6 @@
 package org.jdkstack.jdkserver.tcp.core;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
 import java.util.Iterator;
@@ -9,7 +8,6 @@ import java.util.Set;
 import java.util.UUID;
 import org.jdkstack.jdkserver.tcp.core.channel.JdkClientChannel;
 import org.jdkstack.jdkserver.tcp.core.tcp.client.JdkClientSocketChannel;
-import org.jdkstack.jdkserver.tcp.core.tcp.client.JdkClientSocketChannelWorker;
 import org.study.network.codecs.NetworkMessage;
 
 /**

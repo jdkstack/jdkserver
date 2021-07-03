@@ -1,8 +1,6 @@
 package org.jdkstack.jdkserver.tcp.core;
 
 import java.nio.channels.SelectionKey;
-import java.util.concurrent.atomic.AtomicLong;
-import org.jdkstack.jdkserver.tcp.core.channel.queue.StudyQueue;
 
 /**
  * This is a class description.

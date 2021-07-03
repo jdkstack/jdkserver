@@ -15,43 +15,36 @@ import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLProtocolException;
 import javax.net.ssl.StandardConstants;
 
-/**
- * Instances of this class acts as an explorer of the network data of an
- * SSL/TLS connection.
- */
+/** Instances of this class acts as an explorer of the network data of an SSL/TLS connection. */
 public final class SSLExplorer {
-
-  // Private constructor prevents construction outside this class.
-  private SSLExplorer() {
-  }
 
   /**
    * The header size of TLS/SSL records.
-   * <P>
-   * The value of this constant is {@value}.
+   *
+   * <p>The value of this constant is {@value}.
    */
-  public final static int RECORD_HEADER_SIZE = 0x05;
+  public static final int RECORD_HEADER_SIZE = 0x05;
+
+  // Private constructor prevents construction outside this class.
+  private SSLExplorer() {}
 
   /**
-   * Returns the required number of bytes in the {@code source}
-   * {@link ByteBuffer} necessary to explore SSL/TLS connection.
-   * <P>
-   * This method tries to parse as few bytes as possible from
-   * {@code source} byte buffer to get the length of an
-   * SSL/TLS record.
-   * <P>
-   * This method accesses the {@code source} parameter in read-only
-   * mode, and does not update the buffer's properties such as capacity,
-   * limit, position, and mark values.
+   * Returns the required number of bytes in the {@code source} {@link ByteBuffer} necessary to
+   * explore SSL/TLS connection.
    *
-   * @param  source
-   *         a {@link ByteBuffer} containing
-   *         inbound or outbound network data for an SSL/TLS connection.
-   * @throws BufferUnderflowException if less than {@code RECORD_HEADER_SIZE}
-   *         bytes remaining in {@code source}
+   * <p>This method tries to parse as few bytes as possible from {@code source} byte buffer to get
+   * the length of an SSL/TLS record.
+   *
+   * <p>This method accesses the {@code source} parameter in read-only mode, and does not update the
+   * buffer's properties such as capacity, limit, position, and mark values.
+   *
+   * @param source a {@link ByteBuffer} containing inbound or outbound network data for an SSL/TLS
+   *     connection.
+   * @throws BufferUnderflowException if less than {@code RECORD_HEADER_SIZE} bytes remaining in
+   *     {@code source}
    * @return the required size in byte to explore an SSL/TLS connection
    */
-  public final static int getRequiredSize(ByteBuffer source) {
+  public static final int getRequiredSize(ByteBuffer source) {
 
     ByteBuffer input = source.duplicate();
 
@@ -67,69 +60,54 @@ public final class SSLExplorer {
     if ((firstByte & 0x80) != 0 && thirdByte == 0x01) {
       // looks like a V2ClientHello
       // return (((firstByte & 0x7F) << 8) | (secondByte & 0xFF)) + 2;
-      return RECORD_HEADER_SIZE;   // Only need the header fields
+      return RECORD_HEADER_SIZE; // Only need the header fields
     } else {
       return (((input.get() & 0xFF) << 8) | (input.get() & 0xFF)) + 5;
     }
   }
 
   /**
-   * Returns the required number of bytes in the {@code source} byte array
-   * necessary to explore SSL/TLS connection.
-   * <P>
-   * This method tries to parse as few bytes as possible from
-   * {@code source} byte array to get the length of an
-   * SSL/TLS record.
+   * Returns the required number of bytes in the {@code source} byte array necessary to explore
+   * SSL/TLS connection.
    *
-   * @param  source
-   *         a byte array containing inbound or outbound network data for
-   *         an SSL/TLS connection.
-   * @param  offset
-   *         the start offset in array {@code source} at which the
-   *         network data is read from.
-   * @param  length
-   *         the maximum number of bytes to read.
+   * <p>This method tries to parse as few bytes as possible from {@code source} byte array to get
+   * the length of an SSL/TLS record.
    *
-   * @throws BufferUnderflowException if less than {@code RECORD_HEADER_SIZE}
-   *         bytes remaining in {@code source}
+   * @param source a byte array containing inbound or outbound network data for an SSL/TLS
+   *     connection.
+   * @param offset the start offset in array {@code source} at which the network data is read from.
+   * @param length the maximum number of bytes to read.
+   * @throws BufferUnderflowException if less than {@code RECORD_HEADER_SIZE} bytes remaining in
+   *     {@code source}
    * @return the required size in byte to explore an SSL/TLS connection
    */
-  public final static int getRequiredSize(byte[] source,
-      int offset, int length) throws IOException {
+  public static final int getRequiredSize(byte[] source, int offset, int length)
+      throws IOException {
 
-    ByteBuffer byteBuffer =
-        ByteBuffer.wrap(source, offset, length).asReadOnlyBuffer();
+    ByteBuffer byteBuffer = ByteBuffer.wrap(source, offset, length).asReadOnlyBuffer();
     return getRequiredSize(byteBuffer);
   }
 
   /**
    * Launch and explore the security capabilities from byte buffer.
-   * <P>
-   * This method tries to parse as few records as possible from
-   * {@code source} byte buffer to get the {@link SSLCapabilities}
-   * of an SSL/TLS connection.
-   * <P>
-   * Please NOTE that this method must be called before any handshaking
-   * occurs.  The behavior of this method is not defined in this release
-   * if the handshake has begun, or has completed.
-   * <P>
-   * This method accesses the {@code source} parameter in read-only
-   * mode, and does not update the buffer's properties such as capacity,
-   * limit, position, and mark values.
    *
-   * @param  source
-   *         a {@link ByteBuffer} containing
-   *         inbound or outbound network data for an SSL/TLS connection.
+   * <p>This method tries to parse as few records as possible from {@code source} byte buffer to get
+   * the {@link SSLCapabilities} of an SSL/TLS connection.
    *
+   * <p>Please NOTE that this method must be called before any handshaking occurs. The behavior of
+   * this method is not defined in this release if the handshake has begun, or has completed.
+   *
+   * <p>This method accesses the {@code source} parameter in read-only mode, and does not update the
+   * buffer's properties such as capacity, limit, position, and mark values.
+   *
+   * @param source a {@link ByteBuffer} containing inbound or outbound network data for an SSL/TLS
+   *     connection.
    * @throws IOException on network data error
-   * @throws BufferUnderflowException if not enough source bytes available
-   *         to make a complete exploration.
-   *
-   * @return the explored {@link SSLCapabilities} of the SSL/TLS
-   *         connection
+   * @throws BufferUnderflowException if not enough source bytes available to make a complete
+   *     exploration.
+   * @return the explored {@link SSLCapabilities} of the SSL/TLS connection
    */
-  public final static SSLCapabilities explore(ByteBuffer source)
-      throws IOException {
+  public static final SSLCapabilities explore(ByteBuffer source) throws IOException {
 
     ByteBuffer input = source.duplicate();
 
@@ -144,11 +122,9 @@ public final class SSLExplorer {
     byte thirdByte = input.get();
     if ((firstByte & 0x80) != 0 && thirdByte == 0x01) {
       // looks like a V2ClientHello
-      return exploreV2HelloRecord(input,
-          firstByte, secondByte, thirdByte);
-    } else if (firstByte == 22) {   // 22: handshake record
-      return exploreTLSRecord(input,
-          firstByte, secondByte, thirdByte);
+      return exploreV2HelloRecord(input, firstByte, secondByte, thirdByte);
+    } else if (firstByte == 22) { // 22: handshake record
+      return exploreTLSRecord(input, firstByte, secondByte, thirdByte);
     } else {
       throw new SSLException("Not handshake record");
     }
@@ -156,34 +132,25 @@ public final class SSLExplorer {
 
   /**
    * Launch and explore the security capabilities from byte array.
-   * <P>
-   * Please NOTE that this method must be called before any handshaking
-   * occurs.  The behavior of this method is not defined in this release
-   * if the handshake has begun, or has completed.  Once handshake has
-   * begun, or has completed, the security capabilities can not and
-   * should not be launched with this method.
    *
-   * @param  source
-   *         a byte array containing inbound or outbound network data for
-   *         an SSL/TLS connection.
-   * @param  offset
-   *         the start offset in array {@code source} at which the
-   *         network data is read from.
-   * @param  length
-   *         the maximum number of bytes to read.
+   * <p>Please NOTE that this method must be called before any handshaking occurs. The behavior of
+   * this method is not defined in this release if the handshake has begun, or has completed. Once
+   * handshake has begun, or has completed, the security capabilities can not and should not be
+   * launched with this method.
    *
+   * @param source a byte array containing inbound or outbound network data for an SSL/TLS
+   *     connection.
+   * @param offset the start offset in array {@code source} at which the network data is read from.
+   * @param length the maximum number of bytes to read.
    * @throws IOException on network data error
-   * @throws BufferUnderflowException if not enough source bytes available
-   *         to make a complete exploration.
-   * @return the explored {@link SSLCapabilities} of the SSL/TLS
-   *         connection
-   *
+   * @throws BufferUnderflowException if not enough source bytes available to make a complete
+   *     exploration.
+   * @return the explored {@link SSLCapabilities} of the SSL/TLS connection
    * @see #explore(ByteBuffer)
    */
-  public final static SSLCapabilities explore(byte[] source,
-      int offset, int length) throws IOException {
-    ByteBuffer byteBuffer =
-        ByteBuffer.wrap(source, offset, length).asReadOnlyBuffer();
+  public static final SSLCapabilities explore(byte[] source, int offset, int length)
+      throws IOException {
+    ByteBuffer byteBuffer = ByteBuffer.wrap(source, offset, length).asReadOnlyBuffer();
     return explore(byteBuffer);
   }
 
@@ -205,16 +172,14 @@ public final class SSLExplorer {
    * } V2ClientHello;
    */
   private static SSLCapabilities exploreV2HelloRecord(
-      ByteBuffer input, byte firstByte, byte secondByte,
-      byte thirdByte) throws IOException {
+      ByteBuffer input, byte firstByte, byte secondByte, byte thirdByte) throws IOException {
 
     // We only need the header. We have already had enough source bytes.
     // int recordLength = (firstByte & 0x7F) << 8) | (secondByte & 0xFF);
     try {
       // Is it a V2ClientHello?
       if (thirdByte != 0x01) {
-        throw new SSLException(
-            "Unsupported or Unrecognized SSL record");
+        throw new SSLException("Unsupported or Unrecognized SSL record");
       }
 
       // What's the hello version?
@@ -225,12 +190,14 @@ public final class SSLExplorer {
       // 0x02: minor version of SSLv20
       //
       // SNIServerName is an extension, SSLv20 doesn't support extension.
-      return new SSLCapabilitiesImpl((byte)0x00, (byte)0x02,
-          helloVersionMajor, helloVersionMinor,
+      return new SSLCapabilitiesImpl(
+          (byte) 0x00,
+          (byte) 0x02,
+          helloVersionMajor,
+          helloVersionMinor,
           Collections.<SNIServerName>emptyList());
     } catch (BufferUnderflowException bufe) {
-      throw new SSLProtocolException(
-          "Invalid handshake record");
+      throw new SSLProtocolException("Invalid handshake record");
     }
   }
 
@@ -253,11 +220,10 @@ public final class SSLExplorer {
    * } TLSPlaintext;
    */
   private static SSLCapabilities exploreTLSRecord(
-      ByteBuffer input, byte firstByte, byte secondByte,
-      byte thirdByte) throws IOException {
+      ByteBuffer input, byte firstByte, byte secondByte, byte thirdByte) throws IOException {
 
     // Is it a handshake message?
-    if (firstByte != 22) {        // 22: handshake record
+    if (firstByte != 22) { // 22: handshake record
       throw new SSLException("Not handshake record");
     }
 
@@ -267,17 +233,15 @@ public final class SSLExplorer {
 
     // Is there enough data for a full record?
     int recordLength = getInt16(input);
-    //if (recordLength > input.remaining()) {
-     // throw new BufferUnderflowException();
-   // }
+    // if (recordLength > input.remaining()) {
+    // throw new BufferUnderflowException();
+    // }
 
     // We have already had enough source bytes.
     try {
-      return exploreHandshake(input,
-          recordMajorVersion, recordMinorVersion, recordLength);
+      return exploreHandshake(input, recordMajorVersion, recordMinorVersion, recordLength);
     } catch (BufferUnderflowException bufe) {
-      throw new SSLProtocolException(
-          "Invalid handshake record");
+      throw new SSLProtocolException("Invalid handshake record");
     }
   }
 
@@ -309,12 +273,12 @@ public final class SSLExplorer {
    * } Handshake;
    */
   private static SSLCapabilities exploreHandshake(
-      ByteBuffer input, byte recordMajorVersion,
-      byte recordMinorVersion, int recordLength) throws IOException {
+      ByteBuffer input, byte recordMajorVersion, byte recordMinorVersion, int recordLength)
+      throws IOException {
 
     // What is the handshake type?
     byte handshakeType = input.get();
-    if (handshakeType != 0x01) {   // 0x01: client_hello message
+    if (handshakeType != 0x01) { // 0x01: client_hello message
       throw new IllegalStateException("Not initial handshaking");
     }
 
@@ -323,14 +287,13 @@ public final class SSLExplorer {
 
     // Theoretically, a single handshake message might span multiple
     // records, but in practice this does not occur.
-   // if (handshakeLength > (recordLength - 4)) { // 4: handshake header size
+    // if (handshakeLength > (recordLength - 4)) { // 4: handshake header size
     //  throw new SSLException("Handshake message spans multiple records");
-   // }
+    // }
 
     input = input.duplicate();
-    //input.limit(handshakeLength + input.position());
-    return exploreClientHello(input,
-        recordMajorVersion, recordMinorVersion);
+    // input.limit(handshakeLength + input.position());
+    return exploreClientHello(input, recordMajorVersion, recordMinorVersion);
   }
 
   /*
@@ -360,9 +323,7 @@ public final class SSLExplorer {
    * } ClientHello;
    */
   private static SSLCapabilities exploreClientHello(
-      ByteBuffer input,
-      byte recordMajorVersion,
-      byte recordMinorVersion) throws IOException {
+      ByteBuffer input, byte recordMajorVersion, byte recordMinorVersion) throws IOException {
 
     List<SNIServerName> snList = Collections.<SNIServerName>emptyList();
 
@@ -372,7 +333,7 @@ public final class SSLExplorer {
 
     // ignore random
     int position = input.position();
-    input.position(position + 32);  // 32: the length of Random
+    input.position(position + 32); // 32: the length of Random
 
     // ignore session id
     ignoreByteVector8(input);
@@ -388,8 +349,7 @@ public final class SSLExplorer {
     }
 
     return new SSLCapabilitiesImpl(
-        recordMajorVersion, recordMinorVersion,
-        helloMajorVersion, helloMinorVersion, snList);
+        recordMajorVersion, recordMinorVersion, helloMajorVersion, helloMinorVersion, snList);
   }
 
   /*
@@ -404,17 +364,16 @@ public final class SSLExplorer {
    *     truncated_hmac(4), status_request(5), (65535)
    * } ExtensionType;
    */
-  private static List<SNIServerName> exploreExtensions(ByteBuffer input)
-      throws IOException {
+  private static List<SNIServerName> exploreExtensions(ByteBuffer input) throws IOException {
 
-    int length = getInt16(input);           // length of extensions
+    int length = getInt16(input); // length of extensions
     while (length > 0) {
-      int extType = getInt16(input);      // extenson type
-      int extLen = getInt16(input);       // length of extension data
+      int extType = getInt16(input); // extenson type
+      int extLen = getInt16(input); // length of extension data
 
-      if (extType == 0x00) {      // 0x00: type of server name indication
+      if (extType == 0x00) { // 0x00: type of server name indication
         return exploreSNIExt(input, extLen);
-      } else {                    // ignore other extensions
+      } else { // ignore other extensions
         ignoreByteVector(input, extLen);
       }
 
@@ -442,26 +401,24 @@ public final class SSLExplorer {
    *     ServerName server_name_list<1..2^16-1>
    * } ServerNameList;
    */
-  private static List<SNIServerName> exploreSNIExt(ByteBuffer input,
-      int extLen) throws IOException {
+  private static List<SNIServerName> exploreSNIExt(ByteBuffer input, int extLen)
+      throws IOException {
 
     Map<Integer, SNIServerName> sniMap = new LinkedHashMap<>();
 
     int remains = extLen;
-    if (extLen >= 2) {     // "server_name" extension in ClientHello
-      int listLen = getInt16(input);     // length of server_name_list
+    if (extLen >= 2) { // "server_name" extension in ClientHello
+      int listLen = getInt16(input); // length of server_name_list
       if (listLen == 0 || listLen + 2 != extLen) {
-        throw new SSLProtocolException(
-            "Invalid server name indication extension");
+        throw new SSLProtocolException("Invalid server name indication extension");
       }
 
-      remains -= 2;     // 0x02: the length field of server_name_list
+      remains -= 2; // 0x02: the length field of server_name_list
       while (remains > 0) {
-        int code = getInt8(input);      // name_type
-        int snLen = getInt16(input);    // length field of server name
+        int code = getInt8(input); // name_type
+        int snLen = getInt16(input); // length field of server name
         if (snLen > remains) {
-          throw new SSLProtocolException(
-              "Not enough data to fill declared vector size");
+          throw new SSLProtocolException("Not enough data to fill declared vector size");
         }
         byte[] encoded = new byte[snLen];
         input.get(encoded);
@@ -470,8 +427,7 @@ public final class SSLExplorer {
         switch (code) {
           case StandardConstants.SNI_HOST_NAME:
             if (encoded.length == 0) {
-              throw new SSLProtocolException(
-                  "Empty HostName in server name indication");
+              throw new SSLProtocolException("Empty HostName in server name indication");
             }
             serverName = new SNIHostName(encoded);
             break;
@@ -480,26 +436,21 @@ public final class SSLExplorer {
         }
         // check for duplicated server name type
         if (sniMap.put(serverName.getType(), serverName) != null) {
-          throw new SSLProtocolException(
-              "Duplicated server name of type " +
-                  serverName.getType());
+          throw new SSLProtocolException("Duplicated server name of type " + serverName.getType());
         }
 
-        remains -= encoded.length + 3;  // NameType: 1 byte
+        remains -= encoded.length + 3; // NameType: 1 byte
         // HostName length: 2 bytes
       }
-    } else if (extLen == 0) {     // "server_name" extension in ServerHello
-      throw new SSLProtocolException(
-          "Not server name indication extension in client");
+    } else if (extLen == 0) { // "server_name" extension in ServerHello
+      throw new SSLProtocolException("Not server name indication extension in client");
     }
 
     if (remains != 0) {
-      throw new SSLProtocolException(
-          "Invalid server name indication extension");
+      throw new SSLProtocolException("Invalid server name indication extension");
     }
 
-    return Collections.<SNIServerName>unmodifiableList(
-        new ArrayList<>(sniMap.values()));
+    return Collections.<SNIServerName>unmodifiableList(new ArrayList<>(sniMap.values()));
   }
 
   private static int getInt8(ByteBuffer input) {
@@ -511,8 +462,7 @@ public final class SSLExplorer {
   }
 
   private static int getInt24(ByteBuffer input) {
-    return ((input.get() & 0xFF) << 16) | ((input.get() & 0xFF) << 8) |
-        (input.get() & 0xFF);
+    return ((input.get() & 0xFF) << 16) | ((input.get() & 0xFF) << 8) | (input.get() & 0xFF);
   }
 
   private static void ignoreByteVector8(ByteBuffer input) {
@@ -541,11 +491,7 @@ public final class SSLExplorer {
   }
 
   private static final class SSLCapabilitiesImpl extends SSLCapabilities {
-    private final static Map<Integer, String> versionMap = new HashMap<>(5);
-
-    private final String recordVersion;
-    private final String helloVersion;
-    List<SNIServerName> sniNames;
+    private static final Map<Integer, String> versionMap = new HashMap<>(5);
 
     static {
       versionMap.put(0x0002, "SSLv2Hello");
@@ -556,21 +502,34 @@ public final class SSLExplorer {
       versionMap.put(0x0304, "TLSv1.3");
     }
 
-    SSLCapabilitiesImpl(byte recordMajorVersion, byte recordMinorVersion,
-        byte helloMajorVersion, byte helloMinorVersion,
+    private final String recordVersion;
+    private final String helloVersion;
+    List<SNIServerName> sniNames;
+
+    SSLCapabilitiesImpl(
+        byte recordMajorVersion,
+        byte recordMinorVersion,
+        byte helloMajorVersion,
+        byte helloMinorVersion,
         List<SNIServerName> sniNames) {
 
       int version = (recordMajorVersion << 8) | recordMinorVersion;
-      this.recordVersion = versionMap.get(version) != null ?
-          versionMap.get(version) :
-          unknownVersion(recordMajorVersion, recordMinorVersion);
+      this.recordVersion =
+          versionMap.get(version) != null
+              ? versionMap.get(version)
+              : unknownVersion(recordMajorVersion, recordMinorVersion);
 
       version = (helloMajorVersion << 8) | helloMinorVersion;
-      this.helloVersion = versionMap.get(version) != null ?
-          versionMap.get(version) :
-          unknownVersion(helloMajorVersion, helloMinorVersion);
+      this.helloVersion =
+          versionMap.get(version) != null
+              ? versionMap.get(version)
+              : unknownVersion(helloMajorVersion, helloMinorVersion);
 
       this.sniNames = sniNames;
+    }
+
+    private static String unknownVersion(byte major, byte minor) {
+      return "Unknown-" + ((int) major) + "." + ((int) minor);
     }
 
     @Override
@@ -590,10 +549,6 @@ public final class SSLExplorer {
       }
 
       return sniNames;
-    }
-
-    private static String unknownVersion(byte major, byte minor) {
-      return "Unknown-" + ((int)major) + "." + ((int)minor);
     }
   }
 }

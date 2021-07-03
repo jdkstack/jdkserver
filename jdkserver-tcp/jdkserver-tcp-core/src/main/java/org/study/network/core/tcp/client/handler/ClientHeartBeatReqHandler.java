@@ -6,7 +6,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import org.study.core.context.WorkerContext;
-import org.study.core.context.WorkerStudyContextImpl;
 import org.study.network.codecs.Message;
 import org.study.network.codecs.NetworkMessage;
 import org.study.network.codecs.NetworkMessageType;
@@ -20,9 +19,8 @@ import org.study.network.codecs.NetworkMessageType;
  */
 public class ClientHeartBeatReqHandler extends ChannelDuplexHandler {
 
-  private ScheduledFuture<?> scheduledFuture;
-
   private final WorkerContext scheduleContext;
+  private ScheduledFuture<?> scheduledFuture;
 
   public ClientHeartBeatReqHandler(final WorkerContext scheduleContext) {
     this.scheduleContext = scheduleContext;
@@ -115,7 +113,7 @@ public class ClientHeartBeatReqHandler extends ChannelDuplexHandler {
     @Override
     public void run() {
       final Message heatBeat = buildHeatBeat();
-      //LOG.info("Client send heart beat messsage to server : ---> {}", heatBeat);
+      // LOG.info("Client send heart beat messsage to server : ---> {}", heatBeat);
       this.ctx.writeAndFlush(heatBeat);
     }
 

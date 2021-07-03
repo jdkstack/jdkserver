@@ -20,10 +20,7 @@ import org.study.network.core.tcp.server.pool.TcpServerConnectionPool;
 public abstract class AbstractConnectionPoolManager implements ConnectionPoolManager {
 
   /**
-   * 1连接池名---->连接池.
-   * 2客户端: 服务器IP:服务器端口---->客户端连接池.
-   * 3服务端: 服务器IP:服务器端口---->客户端连接池.
-   * 4服务器IP---->服务器端连接池.
+   * 1连接池名---->连接池. 2客户端: 服务器IP:服务器端口---->客户端连接池. 3服务端: 服务器IP:服务器端口---->客户端连接池. 4服务器IP---->服务器端连接池.
    */
   protected final Map<String, ConnectionPool> connectionPools = new ConcurrentHashMap<>(16);
 

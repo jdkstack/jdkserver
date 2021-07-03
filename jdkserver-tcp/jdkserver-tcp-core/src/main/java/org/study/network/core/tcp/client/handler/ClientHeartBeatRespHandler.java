@@ -28,15 +28,15 @@ public class ClientHeartBeatRespHandler extends ChannelInboundHandlerAdapter {
       final Message message = (Message) msg;
       // 返回心跳应答消息
       if (message.getType() == NetworkMessageType.PING.value()) {
-        //LOG.info("Client Receive server heart beat message : ---> {}", message);
+        // LOG.info("Client Receive server heart beat message : ---> {}", message);
         final Message heartBeat = buildHeatBeat();
-        //LOG.info("Client Send heart beat response message to server: ---> {}", heartBeat);
+        // LOG.info("Client Send heart beat response message to server: ---> {}", heartBeat);
         ctx.writeAndFlush(heartBeat);
         ctx.fireChannelRead(msg);
       } else {
         ctx.fireChannelRead(msg);
       }
-    }else{
+    } else {
       ctx.fireChannelRead(msg);
     }
   }

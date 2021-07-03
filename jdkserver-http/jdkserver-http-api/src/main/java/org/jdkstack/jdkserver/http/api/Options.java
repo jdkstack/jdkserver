@@ -9,6 +9,4 @@ package org.jdkstack.jdkserver.http.api;
  * @version 2021-02-23 13:46
  * @since 2021-02-23 13:46:00
  */
-public interface Options {
-
-}
+public interface Options {}

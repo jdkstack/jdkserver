@@ -4,8 +4,9 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import org.jdkstack.jdkserver.tcp.core.channel.AbstractByteToMessageDecoderHandler;
 import org.jdkstack.jdkserver.tcp.core.channel.ChannelHandlerContext;
-
 import org.study.network.codecs.Message;
+import org.study.network.codecs.NetworkMessage;
+
 /**
  * 网络消息解码器,用于自定义消息的生成.
  *
@@ -28,8 +29,10 @@ public class NetworkByteToMessageDecoderHandler
    * @author admin
    */
   @Override
-  protected void decode(final ChannelHandlerContext ctx, final ByteBuffer body, final Message msg)
+  protected Message decode(final ChannelHandlerContext ctx, final ByteBuffer body)
       throws Exception {
+    // 只处理单条消息.
+    Message message = new NetworkMessage();
     byte b = body.get();
     int anInt1 = body.getInt();
     int anInt2 = body.getInt();
@@ -42,7 +45,7 @@ public class NetworkByteToMessageDecoderHandler
     if (anInt2111 > 0) {
       byte[] bytes111 = new byte[anInt2111];
       body.get(bytes111);
-      msg.setBody(new String(bytes111, StandardCharsets.UTF_8));
+      message.setBody(new String(bytes111, StandardCharsets.UTF_8));
     }
     int anInt21111 = body.getInt();
 
@@ -50,6 +53,6 @@ public class NetworkByteToMessageDecoderHandler
     byte[] bytes1111111 = new byte[anInt21111111];
     body.get(bytes1111111);
     byte b1 = body.get();
-
+    return message;
   }
 }

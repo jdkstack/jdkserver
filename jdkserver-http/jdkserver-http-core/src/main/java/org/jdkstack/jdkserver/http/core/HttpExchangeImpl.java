@@ -8,87 +8,83 @@ import java.net.URI;
 import org.jdkstack.jdkserver.http.core.auth.HttpPrincipal;
 import org.jdkstack.jdkserver.http.core.standard.Headers;
 
-
 public class HttpExchangeImpl extends HttpExchange {
 
-    ExchangeImpl impl;
+  ExchangeImpl impl;
 
-    HttpExchangeImpl (ExchangeImpl impl) {
-        this.impl = impl;
-    }
+  HttpExchangeImpl(ExchangeImpl impl) {
+    this.impl = impl;
+  }
 
-    public Headers getRequestHeaders () {
-        return impl.getRequestHeaders();
-    }
+  public Headers getRequestHeaders() {
+    return impl.getRequestHeaders();
+  }
 
-    public Headers getResponseHeaders () {
-        return impl.getResponseHeaders();
-    }
+  public Headers getResponseHeaders() {
+    return impl.getResponseHeaders();
+  }
 
-    public URI getRequestURI () {
-        return impl.getRequestURI();
-    }
+  public URI getRequestURI() {
+    return impl.getRequestURI();
+  }
 
-    public String getRequestMethod (){
-        return impl.getRequestMethod();
-    }
+  public String getRequestMethod() {
+    return impl.getRequestMethod();
+  }
 
-    public HttpContextImpl getHttpContext (){
-        return impl.getHttpContext();
-    }
+  public HttpContextImpl getHttpContext() {
+    return impl.getHttpContext();
+  }
 
-    public void close () {
-        impl.close();
-    }
+  public void close() {
+    impl.close();
+  }
 
-    public InputStream getRequestBody () {
-        return impl.getRequestBody();
-    }
+  public InputStream getRequestBody() {
+    return impl.getRequestBody();
+  }
 
-    public int getResponseCode () {
-        return impl.getResponseCode();
-    }
+  public int getResponseCode() {
+    return impl.getResponseCode();
+  }
 
-    public OutputStream getResponseBody () {
-        return impl.getResponseBody();
-    }
+  public OutputStream getResponseBody() {
+    return impl.getResponseBody();
+  }
 
+  public void sendResponseHeaders(int rCode, long contentLen) throws IOException {
+    impl.sendResponseHeaders(rCode, contentLen);
+  }
 
-    public void sendResponseHeaders (int rCode, long contentLen)
-    throws IOException
-    {
-        impl.sendResponseHeaders (rCode, contentLen);
-    }
+  public InetSocketAddress getRemoteAddress() {
+    return impl.getRemoteAddress();
+  }
 
-    public InetSocketAddress getRemoteAddress (){
-        return impl.getRemoteAddress();
-    }
+  public InetSocketAddress getLocalAddress() {
+    return impl.getLocalAddress();
+  }
 
-    public InetSocketAddress getLocalAddress (){
-        return impl.getLocalAddress();
-    }
+  public String getProtocol() {
+    return impl.getProtocol();
+  }
 
-    public String getProtocol (){
-        return impl.getProtocol();
-    }
+  public Object getAttribute(String name) {
+    return impl.getAttribute(name);
+  }
 
-    public Object getAttribute (String name) {
-        return impl.getAttribute (name);
-    }
+  public void setAttribute(String name, Object value) {
+    impl.setAttribute(name, value);
+  }
 
-    public void setAttribute (String name, Object value) {
-        impl.setAttribute (name, value);
-    }
+  public void setStreams(InputStream i, OutputStream o) {
+    impl.setStreams(i, o);
+  }
 
-    public void setStreams (InputStream i, OutputStream o) {
-        impl.setStreams (i, o);
-    }
+  public HttpPrincipal getPrincipal() {
+    return impl.getPrincipal();
+  }
 
-    public HttpPrincipal getPrincipal () {
-        return impl.getPrincipal();
-    }
-
-    ExchangeImpl getExchangeImpl () {
-        return impl;
-    }
+  ExchangeImpl getExchangeImpl() {
+    return impl;
+  }
 }

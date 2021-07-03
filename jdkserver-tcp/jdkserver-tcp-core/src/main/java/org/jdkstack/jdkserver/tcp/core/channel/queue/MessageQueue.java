@@ -1,7 +1,5 @@
 package org.jdkstack.jdkserver.tcp.core.channel.queue;
 
-import java.nio.channels.SelectionKey;
-
 /**
  * This is a class description.
  *

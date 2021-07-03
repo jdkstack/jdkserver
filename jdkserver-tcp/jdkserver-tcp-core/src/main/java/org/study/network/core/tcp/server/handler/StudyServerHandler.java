@@ -20,10 +20,9 @@ import org.study.network.codecs.NetworkMessage;
 import org.study.network.codecs.NetworkMessageType;
 import org.study.network.core.common.pool.Connection;
 import org.study.network.core.socket.ConnectionBase;
-import org.study.network.core.common.pool.ConnectionPool;
-import org.study.network.core.tool.RemotingUtil;
 import org.study.network.core.tcp.client.pool.TcpClientConnection;
 import org.study.network.core.tcp.server.manager.ServerConnectionPoolManager;
+import org.study.network.core.tool.RemotingUtil;
 
 public final class StudyServerHandler<C extends ConnectionBase> extends ChannelDuplexHandler {
 

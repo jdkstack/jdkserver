@@ -1,39 +1,29 @@
 package org.jdkstack.jdkserver.tcp.core.tcp.server;
 
-import io.netty.channel.socket.ServerSocketChannelConfig;
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Set;
 import org.jdkstack.jdkserver.tcp.core.channel.AbstractJdkChannel;
 import org.jdkstack.jdkserver.tcp.core.channel.ChannelConfig;
 import org.jdkstack.jdkserver.tcp.core.channel.ChannelException;
-import org.jdkstack.jdkserver.tcp.core.channel.ChannelHandlerContext;
-import org.jdkstack.jdkserver.tcp.core.channel.DefaultChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.channel.JdkServerChannel;
-import org.jdkstack.jdkserver.tcp.core.common.SocketUtils;
 
 public class JdkServerSocketChannel extends AbstractJdkChannel implements JdkServerChannel {
 
   private final ServerSocketChannel serverSocketChannel = this.serverSocketChannel();
 
   private final ServerSocket serverSocket = this.serverSocketChannel.socket();
-
-  private ChannelConfig config;
-
   private final SelectorProvider provider = SelectorProvider.provider();
-
   private final Selector selector = this.openSelector();
-
   protected final SelectionKey selectionKey = this.register();
+  private ChannelConfig config;
 
   public final Selector openSelector() {
     try {

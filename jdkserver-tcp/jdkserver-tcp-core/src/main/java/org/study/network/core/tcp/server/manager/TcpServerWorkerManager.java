@@ -13,7 +13,8 @@ import org.study.network.core.tcp.server.initializer.ServerLoadBalanceChannelIni
  * @since 2021-01-24 11:19:00
  */
 public class TcpServerWorkerManager implements ServerWorkerManager {
-  protected ConcurrentHashMap<String, ServerLoadBalanceChannelInitializer> lb = new ConcurrentHashMap<>();
+  protected ConcurrentHashMap<String, ServerLoadBalanceChannelInitializer> lb =
+      new ConcurrentHashMap<>();
 
   public ServerLoadBalanceChannelInitializer get(String id) {
     return lb.get(id);

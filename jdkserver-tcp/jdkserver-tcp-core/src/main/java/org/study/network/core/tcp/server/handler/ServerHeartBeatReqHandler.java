@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.study.core.context.WorkerContext;
-import org.study.core.context.WorkerStudyContextImpl;
 import org.study.network.codecs.Message;
 import org.study.network.codecs.NetworkMessage;
 import org.study.network.codecs.NetworkMessageType;
@@ -23,14 +22,12 @@ import org.study.network.codecs.NetworkMessageType;
 public class ServerHeartBeatReqHandler extends ChannelInboundHandlerAdapter {
   /** . */
   private static final Logger LOG = LogManager.getLogger(ServerHeartBeatReqHandler.class);
-  private ScheduledFuture<?> scheduledFuture;
-
   private final WorkerContext scheduleContext;
+  private ScheduledFuture<?> scheduledFuture;
 
   public ServerHeartBeatReqHandler(final WorkerContext scheduleContext) {
     this.scheduleContext = scheduleContext;
   }
-
 
   @Override
   public void handlerAdded(ChannelHandlerContext ctx) throws Exception {

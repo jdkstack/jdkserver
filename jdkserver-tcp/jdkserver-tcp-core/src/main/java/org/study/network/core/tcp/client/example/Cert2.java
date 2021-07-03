@@ -79,6 +79,7 @@ public class Cert2 {
   private static String type = "PKCS12";
   private static List<String> crlPaths = new ArrayList<>(16);
   private static List<byte[]> crlValues = new ArrayList<>(16);
+
   public static SslHandler getSsl1(String sni) throws Exception {
     List crlPaths = new ArrayList<>(16);
     List crlValues = new ArrayList<>(16);
@@ -170,7 +171,7 @@ public class Cert2 {
     List crlValues = new ArrayList<>(16);
     Path target =
         new File(
-            "F:\\study\\study-backend-manage\\study-backend-manage-jaas\\target\\classes\\clientP12")
+                "F:\\study\\study-backend-manage\\study-backend-manage-jaas\\target\\classes\\clientP12")
             .toPath();
     byte[] bytes = Files.readAllBytes(target);
     KeyStore ks = KeyStore.getInstance(type);
@@ -185,7 +186,7 @@ public class Cert2 {
     KeyStore ksKey = KeyStore.getInstance(type);
     Path target_t =
         new File(
-            "F:\\study\\study-backend-manage\\study-backend-manage-jaas\\target\\classes\\clientP12-t")
+                "F:\\study\\study-backend-manage\\study-backend-manage-jaas\\target\\classes\\clientP12-t")
             .toPath();
     byte[] bytesKey = Files.readAllBytes(target_t);
     try (InputStream inKey = new ByteArrayInputStream(bytesKey)) {
@@ -446,99 +447,12 @@ public class Cert2 {
     return certs.toArray(new X509Certificate[0]);
   }
 
-  public SslHandler pem() throws Exception {
-    List<String> certPaths = new ArrayList<>(16);
-    List<byte[]> certValues = new ArrayList<>(16);
-    List<String> keyPaths = new ArrayList<>(16);
-    List<byte[]> keyValues = new ArrayList<>(16);
-    keyPaths.add("C:\\OpenSSL\\SSL\\key.pem");
-    certPaths.add("C:\\OpenSSL\\SSL\\cert.pem");
-    for (String keyPath : keyPaths) {
-      Path target_t = new File(keyPath).toPath();
-      byte[] bytesKey = Files.readAllBytes(target_t);
-      keyValues.add(bytesKey);
-    }
-
-    for (String certPath : certPaths) {
-      Path target_t = new File(certPath).toPath();
-      byte[] bytesKey = Files.readAllBytes(target_t);
-      certValues.add(bytesKey);
-    }
-
-    final KeyStore keyStoreKey = KeyStore.getInstance("PKCS12");
-    keyStoreKey.load(null, null);
-
-    for (int i = 0; i < keyValues.size(); i++) {
-      PrivateKey key = loadPrivateKey(keyValues.get(i));
-      Certificate[] chain = loadCerts(certValues.get(i));
-      keyStoreKey.setEntry(
-          "dummy-entry-" + i++,
-          new KeyStore.PrivateKeyEntry(key, chain),
-          new KeyStore.PasswordProtection(DUMMY_PASSWORD.toCharArray()));
-    }
-    extracted(keyStoreKey);
-    KeyManagerFactory factKey =
-        KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-    factKey.init(keyStoreKey, "xxxxxx".toCharArray());
-
-    List<String> certPathsT = new ArrayList<>(16);
-    List<byte[]> certValuesT = new ArrayList<>(16);
-    certPathsT.add("C:\\OpenSSL\\SSL\\cert.pem");
-    for (String certPath : certPathsT) {
-      Path target_t = new File(certPath).toPath();
-      byte[] bytesKey = Files.readAllBytes(target_t);
-      certValuesT.add(bytesKey);
-    }
-    final KeyStore keyStoreTr = KeyStore.getInstance("PKCS12");
-    keyStoreTr.load(null, null);
-    for (int i = 0; i < certValuesT.size(); i++) {
-      for (Certificate cert : loadCerts(certValuesT.get(i))) {
-        keyStoreTr.setCertificateEntry(DUMMY_CERT_ALIAS + i++, cert);
-      }
-    }
-    extracted(keyStoreTr);
-    TrustManagerFactory fact =
-        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-    fact.init(keyStoreTr);
-    Collection<String> suite = new ArrayList<>(16);
-    SslContextBuilder builder = SslContextBuilder.forServer(factKey);
-    if (OpenSsl.isAvailable()) {
-      builder.sslProvider(SslProvider.OPENSSL);
-      suite.addAll(OpenSsl.availableOpenSslCipherSuites());
-    } else {
-      builder.sslProvider(SslProvider.JDK);
-      SSLContext context = SSLContext.getInstance("TLS");
-      context.init(null, null, null);
-      SSLEngine engineCs = context.createSSLEngine();
-      Collections.addAll(suite, engineCs.getEnabledCipherSuites());
-    }
-    builder.trustManager(fact);
-    builder.ciphers(suite);
-    SslContext sslContext = builder.build();
-    SSLEngine engine = sslContext.newEngine(ByteBufAllocator.DEFAULT);
-    engine.setUseClientMode(true);
-    Set<String> protocols = new LinkedHashSet<>();
-    protocols.add("TLSv1");
-    protocols.add("TLSv1.1");
-    protocols.add("TLSv1.2");
-    protocols.add("TLSv1.3");
-    protocols.retainAll(Arrays.asList(engine.getSupportedProtocols()));
-    if (protocols.isEmpty()) {
-      System.out.println("no SSL/TLS protocols are enabled due to configuration restrictions");
-    }
-    engine.setEnabledProtocols(protocols.toArray(new String[protocols.size()]));
-    // engine.setNeedClientAuth(true);
-    // engine.setWantClientAuth(true);
-    // engine.setNeedClientAuth(true);
-    return new SslHandler(engine);
-  }
-
   public static SniHandler sni() throws Exception {
     List crlPaths = new ArrayList<>(16);
     List crlValues = new ArrayList<>(16);
     Path target =
         new File(
-            "F:\\study\\study-backend-manage\\study-backend-manage-jaas\\target\\classes\\ca\\client\\clientP1111")
+                "F:\\study\\study-backend-manage\\study-backend-manage-jaas\\target\\classes\\ca\\client\\clientP1111")
             .toPath();
     byte[] bytes = Files.readAllBytes(target);
     KeyStore ks = KeyStore.getInstance(type);
@@ -561,7 +475,7 @@ public class Cert2 {
     KeyStore ksKey = KeyStore.getInstance(type);
     Path target_t =
         new File(
-            "F:\\study\\study-backend-manage\\study-backend-manage-jaas\\target\\classes\\ca\\client\\clientP12-t")
+                "F:\\study\\study-backend-manage\\study-backend-manage-jaas\\target\\classes\\ca\\client\\clientP12-t")
             .toPath();
     byte[] bytesKey = Files.readAllBytes(target_t);
     try (InputStream inKey = new ByteArrayInputStream(bytesKey)) {
@@ -652,12 +566,62 @@ public class Cert2 {
     }
   }
 
-      /*    X509KeyManager mgr = X509_KEY_MANAGER.get(clientName);
-    TrustManagerFactory fact = TRUST_MANAGER_FACTORY.get(clientName);
-    SslContextBuilder builder = SslContextBuilder.forClient();
-    builder.trustManager(fact);
-    builder.keyManager(mgr);
-    ArrayList<String> suite = new ArrayList<>();
+  public SslHandler pem() throws Exception {
+    List<String> certPaths = new ArrayList<>(16);
+    List<byte[]> certValues = new ArrayList<>(16);
+    List<String> keyPaths = new ArrayList<>(16);
+    List<byte[]> keyValues = new ArrayList<>(16);
+    keyPaths.add("C:\\OpenSSL\\SSL\\key.pem");
+    certPaths.add("C:\\OpenSSL\\SSL\\cert.pem");
+    for (String keyPath : keyPaths) {
+      Path target_t = new File(keyPath).toPath();
+      byte[] bytesKey = Files.readAllBytes(target_t);
+      keyValues.add(bytesKey);
+    }
+
+    for (String certPath : certPaths) {
+      Path target_t = new File(certPath).toPath();
+      byte[] bytesKey = Files.readAllBytes(target_t);
+      certValues.add(bytesKey);
+    }
+
+    final KeyStore keyStoreKey = KeyStore.getInstance("PKCS12");
+    keyStoreKey.load(null, null);
+
+    for (int i = 0; i < keyValues.size(); i++) {
+      PrivateKey key = loadPrivateKey(keyValues.get(i));
+      Certificate[] chain = loadCerts(certValues.get(i));
+      keyStoreKey.setEntry(
+          "dummy-entry-" + i++,
+          new KeyStore.PrivateKeyEntry(key, chain),
+          new KeyStore.PasswordProtection(DUMMY_PASSWORD.toCharArray()));
+    }
+    extracted(keyStoreKey);
+    KeyManagerFactory factKey =
+        KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    factKey.init(keyStoreKey, "xxxxxx".toCharArray());
+
+    List<String> certPathsT = new ArrayList<>(16);
+    List<byte[]> certValuesT = new ArrayList<>(16);
+    certPathsT.add("C:\\OpenSSL\\SSL\\cert.pem");
+    for (String certPath : certPathsT) {
+      Path target_t = new File(certPath).toPath();
+      byte[] bytesKey = Files.readAllBytes(target_t);
+      certValuesT.add(bytesKey);
+    }
+    final KeyStore keyStoreTr = KeyStore.getInstance("PKCS12");
+    keyStoreTr.load(null, null);
+    for (int i = 0; i < certValuesT.size(); i++) {
+      for (Certificate cert : loadCerts(certValuesT.get(i))) {
+        keyStoreTr.setCertificateEntry(DUMMY_CERT_ALIAS + i++, cert);
+      }
+    }
+    extracted(keyStoreTr);
+    TrustManagerFactory fact =
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+    fact.init(keyStoreTr);
+    Collection<String> suite = new ArrayList<>(16);
+    SslContextBuilder builder = SslContextBuilder.forServer(factKey);
     if (OpenSsl.isAvailable()) {
       builder.sslProvider(SslProvider.OPENSSL);
       suite.addAll(OpenSsl.availableOpenSslCipherSuites());
@@ -668,6 +632,43 @@ public class Cert2 {
       SSLEngine engineCs = context.createSSLEngine();
       Collections.addAll(suite, engineCs.getEnabledCipherSuites());
     }
+    builder.trustManager(fact);
     builder.ciphers(suite);
-    SslContext sslContext = builder.build();*/
+    SslContext sslContext = builder.build();
+    SSLEngine engine = sslContext.newEngine(ByteBufAllocator.DEFAULT);
+    engine.setUseClientMode(true);
+    Set<String> protocols = new LinkedHashSet<>();
+    protocols.add("TLSv1");
+    protocols.add("TLSv1.1");
+    protocols.add("TLSv1.2");
+    protocols.add("TLSv1.3");
+    protocols.retainAll(Arrays.asList(engine.getSupportedProtocols()));
+    if (protocols.isEmpty()) {
+      System.out.println("no SSL/TLS protocols are enabled due to configuration restrictions");
+    }
+    engine.setEnabledProtocols(protocols.toArray(new String[protocols.size()]));
+    // engine.setNeedClientAuth(true);
+    // engine.setWantClientAuth(true);
+    // engine.setNeedClientAuth(true);
+    return new SslHandler(engine);
+  }
+
+  /*    X509KeyManager mgr = X509_KEY_MANAGER.get(clientName);
+  TrustManagerFactory fact = TRUST_MANAGER_FACTORY.get(clientName);
+  SslContextBuilder builder = SslContextBuilder.forClient();
+  builder.trustManager(fact);
+  builder.keyManager(mgr);
+  ArrayList<String> suite = new ArrayList<>();
+  if (OpenSsl.isAvailable()) {
+    builder.sslProvider(SslProvider.OPENSSL);
+    suite.addAll(OpenSsl.availableOpenSslCipherSuites());
+  } else {
+    builder.sslProvider(SslProvider.JDK);
+    SSLContext context = SSLContext.getInstance("TLS");
+    context.init(null, null, null);
+    SSLEngine engineCs = context.createSSLEngine();
+    Collections.addAll(suite, engineCs.getEnabledCipherSuites());
+  }
+  builder.ciphers(suite);
+  SslContext sslContext = builder.build();*/
 }

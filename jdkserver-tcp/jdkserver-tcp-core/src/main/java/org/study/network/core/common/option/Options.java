@@ -9,6 +9,4 @@ package org.study.network.core.common.option;
  * @version 2021-02-23 13:46
  * @since 2021-02-23 13:46:00
  */
-public interface Options {
-
-}
+public interface Options {}

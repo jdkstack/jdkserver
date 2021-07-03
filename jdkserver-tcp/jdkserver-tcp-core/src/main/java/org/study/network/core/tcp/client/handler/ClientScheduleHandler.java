@@ -8,7 +8,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import org.study.core.context.WorkerContext;
-import org.study.core.context.WorkerStudyContextImpl;
 
 /**
  * This is a class description.
@@ -21,30 +20,11 @@ import org.study.core.context.WorkerStudyContextImpl;
  */
 public class ClientScheduleHandler extends ChannelDuplexHandler {
 
-  private ScheduledFuture<?> scheduledFuture;
-
   private final WorkerContext scheduleContext;
+  private ScheduledFuture<?> scheduledFuture;
 
   public ClientScheduleHandler(final WorkerContext scheduleContext) {
     this.scheduleContext = scheduleContext;
-  }
-
-  private final class TrafficMonitoringTask implements Runnable {
-    private ChannelHandlerContext ctx;
-
-    public TrafficMonitoringTask(ChannelHandlerContext ctx) {
-      this.ctx = ctx;
-    }
-
-    @Override
-    public void run() {
-      GlobalTrafficShapingHandler globalTrafficShapingHandler =
-          (GlobalTrafficShapingHandler) ctx.pipeline().get("GlobalTrafficShapingHandler");
-      //LOG.info("Client global Traffic Shaping: ---> {}", globalTrafficShapingHandler);
-      ChannelTrafficShapingHandler channelTrafficShapingHandler =
-          (ChannelTrafficShapingHandler) ctx.pipeline().get("ChannelTrafficShapingHandler");
-      //LOG.info("Client channel Traffic Shaping: ---> {}", channelTrafficShapingHandler);
-    }
   }
 
   @Override
@@ -62,5 +42,23 @@ public class ClientScheduleHandler extends ChannelDuplexHandler {
       scheduledFuture.cancel(true);
     }
     super.handlerRemoved(ctx);
+  }
+
+  private final class TrafficMonitoringTask implements Runnable {
+    private ChannelHandlerContext ctx;
+
+    public TrafficMonitoringTask(ChannelHandlerContext ctx) {
+      this.ctx = ctx;
+    }
+
+    @Override
+    public void run() {
+      GlobalTrafficShapingHandler globalTrafficShapingHandler =
+          (GlobalTrafficShapingHandler) ctx.pipeline().get("GlobalTrafficShapingHandler");
+      // LOG.info("Client global Traffic Shaping: ---> {}", globalTrafficShapingHandler);
+      ChannelTrafficShapingHandler channelTrafficShapingHandler =
+          (ChannelTrafficShapingHandler) ctx.pipeline().get("ChannelTrafficShapingHandler");
+      // LOG.info("Client channel Traffic Shaping: ---> {}", channelTrafficShapingHandler);
+    }
   }
 }

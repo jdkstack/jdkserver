@@ -1,12 +1,7 @@
 package org.jdkstack.jdkserver.tcp.core.tcp.server;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
-import java.util.Iterator;
-import java.util.Set;
-import org.jdkstack.jdkserver.tcp.core.JdkServerSocketChannelEventRunnable;
 import org.jdkstack.jdkserver.tcp.core.JdkServerSocketChannelMessageHandler;
 import org.jdkstack.jdkserver.tcp.core.channel.JdkServerChannel;
 import org.jdkstack.jdkserver.tcp.core.tcp.bridge.JdkBridgeChannel;
@@ -26,7 +21,7 @@ public class JdkServerSocketChannelWorker implements Runnable {
 
   @Override
   public void run() {
-    while (!isRun()) {
+    while (!isRun) {
       SelectionKey key = messageHandler.poll();
       if (key == null) {
         continue;

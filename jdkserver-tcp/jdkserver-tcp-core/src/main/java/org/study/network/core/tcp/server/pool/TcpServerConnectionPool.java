@@ -13,7 +13,8 @@ import org.study.network.core.common.pool.ConnectionSelectStrategy;
  * @since 2021-01-22 13:54:00
  */
 public class TcpServerConnectionPool extends AbstractConnectionPool {
-  public TcpServerConnectionPool(){}
+  public TcpServerConnectionPool() {}
+
   public TcpServerConnectionPool(ConnectionSelectStrategy strategy) {
     super(strategy);
   }

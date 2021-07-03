@@ -21,19 +21,6 @@ import javax.net.ssl.TrustManagerFactory;
 
 public final class SslContextBuilder {
 
-  public static SslContextBuilder forClient() {
-    return new SslContextBuilder(false);
-  }
-
-  public static SslContextBuilder forServer(
-      PrivateKey key, String keyPassword, X509Certificate... keyCertChain) {
-    return new SslContextBuilder(true).keyManager(key, keyPassword, keyCertChain);
-  }
-
-  public static SslContextBuilder forServer(KeyManagerFactory keyManagerFactory) {
-    return new SslContextBuilder(true).keyManager(keyManagerFactory);
-  }
-
   private final boolean forServer;
   private Provider sslContextProvider;
   private X509Certificate[] trustCertCollection;
@@ -49,124 +36,21 @@ public final class SslContextBuilder {
   private boolean startTls;
   private boolean enableOcsp;
   private String keyStoreType = KeyStore.getDefaultType();
-
   private SslContextBuilder(boolean forServer) {
     this.forServer = forServer;
   }
 
-  public SslContextBuilder keyStoreType(String keyStoreType) {
-    this.keyStoreType = keyStoreType;
-    return this;
+  public static SslContextBuilder forClient() {
+    return new SslContextBuilder(false);
   }
 
-  public SslContextBuilder sslContextProvider(Provider sslContextProvider) {
-    this.sslContextProvider = sslContextProvider;
-    return this;
-  }
-
-  public SslContextBuilder trustManager(X509Certificate... trustCertCollection) {
-    this.trustCertCollection = trustCertCollection != null ? trustCertCollection.clone() : null;
-    trustManagerFactory = null;
-    return this;
-  }
-
-  public SslContextBuilder trustManager(Iterable<? extends X509Certificate> trustCertCollection) {
-    return trustManager(toArray(trustCertCollection, EmptyArrays.EMPTY_X509_CERTIFICATES));
-  }
-
-  public SslContextBuilder trustManager(TrustManagerFactory trustManagerFactory) {
-    trustCertCollection = null;
-    this.trustManagerFactory = trustManagerFactory;
-    return this;
-  }
-
-  public SslContextBuilder keyManager(PrivateKey key, X509Certificate... keyCertChain) {
-    return keyManager(key, null, keyCertChain);
-  }
-
-  public SslContextBuilder keyManager(
-      PrivateKey key, Iterable<? extends X509Certificate> keyCertChain) {
-    return keyManager(key, toArray(keyCertChain, EmptyArrays.EMPTY_X509_CERTIFICATES));
-  }
-
-  public SslContextBuilder keyManager(
+  public static SslContextBuilder forServer(
       PrivateKey key, String keyPassword, X509Certificate... keyCertChain) {
-    if (forServer) {
-      Objects.requireNonNull(keyCertChain, "keyCertChain required for servers");
-      if (keyCertChain.length == 0) {
-        throw new IllegalArgumentException("keyCertChain must be non-empty");
-      }
-      Objects.requireNonNull(key, "key required for servers");
-    }
-    if (keyCertChain == null || keyCertChain.length == 0) {
-      this.keyCertChain = null;
-    } else {
-      for (X509Certificate cert : keyCertChain) {
-        if (cert == null) {
-          throw new IllegalArgumentException("keyCertChain contains null entry");
-        }
-      }
-      this.keyCertChain = keyCertChain.clone();
-    }
-    this.key = key;
-    this.keyPassword = keyPassword;
-    keyManagerFactory = null;
-    return this;
+    return new SslContextBuilder(true).keyManager(key, keyPassword, keyCertChain);
   }
 
-  public SslContextBuilder keyManager(
-      PrivateKey key, String keyPassword, Iterable<? extends X509Certificate> keyCertChain) {
-    return keyManager(key, keyPassword, toArray(keyCertChain, EmptyArrays.EMPTY_X509_CERTIFICATES));
-  }
-
-  public SslContextBuilder keyManager(KeyManagerFactory keyManagerFactory) {
-    if (forServer) {
-      Objects.requireNonNull(keyManagerFactory, "keyManagerFactory required for servers");
-    }
-    keyCertChain = null;
-    key = null;
-    keyPassword = null;
-    this.keyManagerFactory = keyManagerFactory;
-    return this;
-  }
-
-  public SslContextBuilder keyManager(KeyManager keyManager) {
-    if (forServer) {
-      Objects.requireNonNull(keyManager, "keyManager required for servers");
-    }
-    if (keyManager != null) {
-      // this.keyManagerFactory = new KeyManagerFactoryWrapper(keyManager);
-    } else {
-      this.keyManagerFactory = null;
-    }
-    keyCertChain = null;
-    key = null;
-    keyPassword = null;
-    return this;
-  }
-
-  public SslContextBuilder sessionCacheSize(long sessionCacheSize) {
-    this.sessionCacheSize = sessionCacheSize;
-    return this;
-  }
-
-  public SslContextBuilder sessionTimeout(long sessionTimeout) {
-    this.sessionTimeout = sessionTimeout;
-    return this;
-  }
-
-  public SslContextBuilder protocols(String... protocols) {
-    this.protocols = protocols == null ? null : protocols.clone();
-    return this;
-  }
-
-  public SslContextBuilder protocols(Iterable<String> protocols) {
-    return protocols(toArray(protocols, EmptyArrays.EMPTY_STRINGS));
-  }
-
-  public SslContextBuilder startTls(boolean startTls) {
-    this.startTls = startTls;
-    return this;
+  public static SslContextBuilder forServer(KeyManagerFactory keyManagerFactory) {
+    return new SslContextBuilder(true).keyManager(keyManagerFactory);
   }
 
   private static SSLContext newSSLContextClient(
@@ -362,6 +246,132 @@ public final class SslContextBuilder {
     return kmf;
   }
 
+  private static <T> T[] toArray(Iterable<? extends T> iterable, T[] prototype) {
+    if (iterable == null) {
+      return null;
+    }
+    final List<T> list = new ArrayList<T>();
+    for (T element : iterable) {
+      list.add(element);
+    }
+    return list.toArray(prototype);
+  }
+
+  public SslContextBuilder keyStoreType(String keyStoreType) {
+    this.keyStoreType = keyStoreType;
+    return this;
+  }
+
+  public SslContextBuilder sslContextProvider(Provider sslContextProvider) {
+    this.sslContextProvider = sslContextProvider;
+    return this;
+  }
+
+  public SslContextBuilder trustManager(X509Certificate... trustCertCollection) {
+    this.trustCertCollection = trustCertCollection != null ? trustCertCollection.clone() : null;
+    trustManagerFactory = null;
+    return this;
+  }
+
+  public SslContextBuilder trustManager(Iterable<? extends X509Certificate> trustCertCollection) {
+    return trustManager(toArray(trustCertCollection, EmptyArrays.EMPTY_X509_CERTIFICATES));
+  }
+
+  public SslContextBuilder trustManager(TrustManagerFactory trustManagerFactory) {
+    trustCertCollection = null;
+    this.trustManagerFactory = trustManagerFactory;
+    return this;
+  }
+
+  public SslContextBuilder keyManager(PrivateKey key, X509Certificate... keyCertChain) {
+    return keyManager(key, null, keyCertChain);
+  }
+
+  public SslContextBuilder keyManager(
+      PrivateKey key, Iterable<? extends X509Certificate> keyCertChain) {
+    return keyManager(key, toArray(keyCertChain, EmptyArrays.EMPTY_X509_CERTIFICATES));
+  }
+
+  public SslContextBuilder keyManager(
+      PrivateKey key, String keyPassword, X509Certificate... keyCertChain) {
+    if (forServer) {
+      Objects.requireNonNull(keyCertChain, "keyCertChain required for servers");
+      if (keyCertChain.length == 0) {
+        throw new IllegalArgumentException("keyCertChain must be non-empty");
+      }
+      Objects.requireNonNull(key, "key required for servers");
+    }
+    if (keyCertChain == null || keyCertChain.length == 0) {
+      this.keyCertChain = null;
+    } else {
+      for (X509Certificate cert : keyCertChain) {
+        if (cert == null) {
+          throw new IllegalArgumentException("keyCertChain contains null entry");
+        }
+      }
+      this.keyCertChain = keyCertChain.clone();
+    }
+    this.key = key;
+    this.keyPassword = keyPassword;
+    keyManagerFactory = null;
+    return this;
+  }
+
+  public SslContextBuilder keyManager(
+      PrivateKey key, String keyPassword, Iterable<? extends X509Certificate> keyCertChain) {
+    return keyManager(key, keyPassword, toArray(keyCertChain, EmptyArrays.EMPTY_X509_CERTIFICATES));
+  }
+
+  public SslContextBuilder keyManager(KeyManagerFactory keyManagerFactory) {
+    if (forServer) {
+      Objects.requireNonNull(keyManagerFactory, "keyManagerFactory required for servers");
+    }
+    keyCertChain = null;
+    key = null;
+    keyPassword = null;
+    this.keyManagerFactory = keyManagerFactory;
+    return this;
+  }
+
+  public SslContextBuilder keyManager(KeyManager keyManager) {
+    if (forServer) {
+      Objects.requireNonNull(keyManager, "keyManager required for servers");
+    }
+    if (keyManager != null) {
+      // this.keyManagerFactory = new KeyManagerFactoryWrapper(keyManager);
+    } else {
+      this.keyManagerFactory = null;
+    }
+    keyCertChain = null;
+    key = null;
+    keyPassword = null;
+    return this;
+  }
+
+  public SslContextBuilder sessionCacheSize(long sessionCacheSize) {
+    this.sessionCacheSize = sessionCacheSize;
+    return this;
+  }
+
+  public SslContextBuilder sessionTimeout(long sessionTimeout) {
+    this.sessionTimeout = sessionTimeout;
+    return this;
+  }
+
+  public SslContextBuilder protocols(String... protocols) {
+    this.protocols = protocols == null ? null : protocols.clone();
+    return this;
+  }
+
+  public SslContextBuilder protocols(Iterable<String> protocols) {
+    return protocols(toArray(protocols, EmptyArrays.EMPTY_STRINGS));
+  }
+
+  public SslContextBuilder startTls(boolean startTls) {
+    this.startTls = startTls;
+    return this;
+  }
+
   public SSLContext build() throws SSLException {
     if (forServer) {
       return newSSLContextServer(
@@ -388,16 +398,5 @@ public final class SslContextBuilder {
           sessionTimeout,
           keyStoreType);
     }
-  }
-
-  private static <T> T[] toArray(Iterable<? extends T> iterable, T[] prototype) {
-    if (iterable == null) {
-      return null;
-    }
-    final List<T> list = new ArrayList<T>();
-    for (T element : iterable) {
-      list.add(element);
-    }
-    return list.toArray(prototype);
   }
 }

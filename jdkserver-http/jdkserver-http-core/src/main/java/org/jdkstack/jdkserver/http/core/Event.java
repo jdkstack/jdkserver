@@ -2,9 +2,9 @@ package org.jdkstack.jdkserver.http.core;
 
 class Event {
 
-    ExchangeImpl exchange;
+  ExchangeImpl exchange;
 
-    protected Event (ExchangeImpl t) {
-        this.exchange = t;
-    }
+  protected Event(ExchangeImpl t) {
+    this.exchange = t;
+  }
 }

@@ -7,9 +7,7 @@ import org.study.core.future.Handler;
 import org.study.core.future.StudyFuture;
 import org.study.network.codecs.NetworkMessage;
 
-/**
- * @author admin
- */
+/** @author admin */
 public interface NetSocket extends ReadStream<Buffer>, WriteStream<Buffer> {
 
   @Override

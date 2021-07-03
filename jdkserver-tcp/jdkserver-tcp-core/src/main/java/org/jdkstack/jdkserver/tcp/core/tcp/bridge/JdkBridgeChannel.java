@@ -1,6 +1,5 @@
 package org.jdkstack.jdkserver.tcp.core.tcp.bridge;
 
-import java.io.IOException;
 import org.study.network.codecs.Message;
 
 public interface JdkBridgeChannel {

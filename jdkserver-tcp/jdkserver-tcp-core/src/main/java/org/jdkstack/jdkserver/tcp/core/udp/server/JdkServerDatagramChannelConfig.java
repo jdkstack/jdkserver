@@ -1,5 +1,3 @@
 package org.jdkstack.jdkserver.tcp.core.udp.server;
 
-public class JdkServerDatagramChannelConfig {
-
-}
+public class JdkServerDatagramChannelConfig {}

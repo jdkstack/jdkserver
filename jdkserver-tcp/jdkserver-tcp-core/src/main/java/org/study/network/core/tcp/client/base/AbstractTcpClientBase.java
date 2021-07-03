@@ -86,7 +86,8 @@ public abstract class AbstractTcpClientBase implements TcpClient {
     // bootstrap.resolver(NoopAddressResolverGroup.INSTANCE);
     // bootstrap.resolver(new DnsAddressResolverGroup(new DnsNameResolverBuilder()));
     // DnsAddressResolverGroup dGroup = new DnsAddressResolverGroup(new DnsNameResolverBuilder());
-    // RoundRobinDnsAddressResolverGroup roundGroup = new RoundRobinDnsAddressResolverGroup(new DnsNameResolverBuilder());
+    // RoundRobinDnsAddressResolverGroup roundGroup = new RoundRobinDnsAddressResolverGroup(new
+    // DnsNameResolverBuilder());
     bootstrap.group(channelBalance.workers());
     // 客户端连接服务器之前,需要进行初始化的操作.
     bootstrap.handler(channelBalance);

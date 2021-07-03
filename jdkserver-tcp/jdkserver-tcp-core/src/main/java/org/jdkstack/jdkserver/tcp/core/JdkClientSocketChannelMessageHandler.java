@@ -15,12 +15,11 @@ import org.jdkstack.jdkserver.tcp.core.channel.queue.StudyWorker;
  */
 public class JdkClientSocketChannelMessageHandler extends AbstractHandler {
   /** . */
-  private Runnable consumerRunnable;
-  /** . */
   private final StudyQueue<Object> fileQueue;
-
   /** 生产日志处理器. */
   private final StudyWorker<SelectionKey> producerWorker;
+  /** . */
+  private Runnable consumerRunnable;
 
   /**
    * This is a method description.
@@ -55,5 +54,4 @@ public class JdkClientSocketChannelMessageHandler extends AbstractHandler {
   public int size() {
     return 0;
   }
-
 }

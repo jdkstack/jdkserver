@@ -24,8 +24,8 @@ import java.net.SocketAddress;
 import java.util.Objects;
 import org.study.core.future.AsyncResult;
 import org.study.core.future.Handler;
-import org.study.network.core.tcp.client.handler.StudyClientHandler;
 import org.study.network.core.socket.Buffer;
+import org.study.network.core.tcp.client.handler.StudyClientHandler;
 
 /**
  * This is a class description.
@@ -40,15 +40,14 @@ public class AbstractUdpServerBase implements UdpServer {
   private DatagramChannel channel;
   private Handler<UdpServer> packetHandler;
 
-  public AbstractUdpServerBase(String studyImpl) {
-  }
+  public AbstractUdpServerBase(String studyImpl) {}
 
   @Override
   public io.netty.util.concurrent.Future<Channel> listenUdpServer(
       int port, String host, InternetProtocolFamily family) {
-    UdpServerOptions options = null;//(UdpServerOptions) studyImpl.getNetworkOptions();
-    EventLoop studyEventLoop = null;//studyImpl.getStudyEventLoop();
-    EventLoopGroup masterEventLoopGroup = null;//studyImpl.getMasterEventLoopGroup();
+    UdpServerOptions options = null; // (UdpServerOptions) studyImpl.getNetworkOptions();
+    EventLoop studyEventLoop = null; // studyImpl.getStudyEventLoop();
+    EventLoopGroup masterEventLoopGroup = null; // studyImpl.getMasterEventLoopGroup();
     // DatagramChannel channel = null;
     if (Epoll.isAvailable()) {
       channel = new EpollDatagramChannel();

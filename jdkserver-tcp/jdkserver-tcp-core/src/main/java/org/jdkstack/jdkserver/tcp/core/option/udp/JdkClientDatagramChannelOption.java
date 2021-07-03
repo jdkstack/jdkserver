@@ -1,5 +1,3 @@
 package org.jdkstack.jdkserver.tcp.core.option.udp;
 
-public class JdkClientDatagramChannelOption {
-
-}
+public class JdkClientDatagramChannelOption {}

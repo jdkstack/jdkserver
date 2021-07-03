@@ -1,7 +1,5 @@
 package org.study.network.core.common.option;
 
-import org.study.network.core.common.option.Options;
-
 /**
  * This is a class description.
  *

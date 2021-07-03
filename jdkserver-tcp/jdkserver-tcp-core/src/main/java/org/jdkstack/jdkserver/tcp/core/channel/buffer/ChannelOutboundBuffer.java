@@ -3,44 +3,68 @@ package org.jdkstack.jdkserver.tcp.core.channel.buffer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.channel.FileRegion;
-import io.netty.util.concurrent.FastThreadLocal;
-import io.netty.util.internal.SystemPropertyUtil;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SelectionKey;
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
-import org.jdkstack.jdkserver.tcp.core.channel.ChannelPipeline;
 import org.jdkstack.jdkserver.tcp.core.channel.queue.MessageQueue;
 import org.jdkstack.jdkserver.tcp.core.channel.queue.StudyQueue;
-
-import static java.lang.Math.min;
 
 public final class ChannelOutboundBuffer implements OutboundBuffer {
 
   private static final int MESSAGE_OVERHEAD = 96;
 
   private static final StudyQueue<Object> MESSAGE_QUEUE = new MessageQueue("MessageQueue");
-
-  private int flushed;
-
-  private int nioBufferCount;
-  private long nioBufferSize;
-
-  private boolean inFail;
-
   private static final AtomicLongFieldUpdater<ChannelOutboundBuffer> TOTAL_PENDING_SIZE_UPDATER =
       AtomicLongFieldUpdater.newUpdater(ChannelOutboundBuffer.class, "totalPendingSize");
-
-  private volatile long totalPendingSize;
-
   private static final AtomicIntegerFieldUpdater<ChannelOutboundBuffer> UNWRITABLE_UPDATER =
       AtomicIntegerFieldUpdater.newUpdater(ChannelOutboundBuffer.class, "unwritable");
-
+  private int flushed;
+  private int nioBufferCount;
+  private long nioBufferSize;
+  private boolean inFail;
+  private volatile long totalPendingSize;
   private volatile int unwritable;
 
   private volatile Runnable fireChannelWritabilityChangedTask;
+
+  private static long total(Object msg) {
+    if (msg instanceof ByteBuf) {
+      return ((ByteBuf) msg).readableBytes();
+    }
+    if (msg instanceof FileRegion) {
+      return ((FileRegion) msg).count();
+    }
+    if (msg instanceof ByteBufHolder) {
+      return ((ByteBufHolder) msg).content().readableBytes();
+    }
+    return -1;
+  }
+
+  private static ByteBuffer[] expandNioBufferArray(ByteBuffer[] array, int neededSpace, int size) {
+    int newCapacity = array.length;
+    do {
+      // double capacity until it is big enough
+      // See https://github.com/netty/netty/issues/1890
+      newCapacity <<= 1;
+
+      if (newCapacity < 0) {
+        throw new IllegalStateException();
+      }
+
+    } while (neededSpace > newCapacity);
+
+    ByteBuffer[] newArray = new ByteBuffer[newCapacity];
+    System.arraycopy(array, 0, newArray, 0, size);
+
+    return newArray;
+  }
+
+  private static int writabilityMask(int index) {
+    if (index < 1 || index > 31) {
+      throw new IllegalArgumentException("index: " + index + " (expected: 1~31)");
+    }
+    return 1 << index;
+  }
 
   public void addMessage(Object msg, int size) {
     MESSAGE_QUEUE.enqueue(msg);
@@ -76,19 +100,6 @@ public final class ChannelOutboundBuffer implements OutboundBuffer {
     /* if (notifyWritability && newWriteBufferSize < channel.config().getWriteBufferLowWaterMark()) {
       setWritable(invokeLater);
     }*/
-  }
-
-  private static long total(Object msg) {
-    if (msg instanceof ByteBuf) {
-      return ((ByteBuf) msg).readableBytes();
-    }
-    if (msg instanceof FileRegion) {
-      return ((FileRegion) msg).count();
-    }
-    if (msg instanceof ByteBufHolder) {
-      return ((ByteBufHolder) msg).content().readableBytes();
-    }
-    return -1;
   }
 
   public Object current() {
@@ -152,7 +163,6 @@ public final class ChannelOutboundBuffer implements OutboundBuffer {
     int count = nioBufferCount;
     if (count > 0) {
       nioBufferCount = 0;
-
     }
   }
 
@@ -172,25 +182,6 @@ public final class ChannelOutboundBuffer implements OutboundBuffer {
     return null;
   }
 
-  private static ByteBuffer[] expandNioBufferArray(ByteBuffer[] array, int neededSpace, int size) {
-    int newCapacity = array.length;
-    do {
-      // double capacity until it is big enough
-      // See https://github.com/netty/netty/issues/1890
-      newCapacity <<= 1;
-
-      if (newCapacity < 0) {
-        throw new IllegalStateException();
-      }
-
-    } while (neededSpace > newCapacity);
-
-    ByteBuffer[] newArray = new ByteBuffer[newCapacity];
-    System.arraycopy(array, 0, newArray, 0, size);
-
-    return newArray;
-  }
-
   public int nioBufferCount() {
     return nioBufferCount;
   }
@@ -201,6 +192,19 @@ public final class ChannelOutboundBuffer implements OutboundBuffer {
 
   public boolean isWritable() {
     return unwritable == 0;
+  }
+
+  private void setWritable(boolean invokeLater) {
+    for (; ; ) {
+      final int oldValue = unwritable;
+      final int newValue = oldValue & ~1;
+      if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
+        if (oldValue != 0 && newValue == 0) {
+          fireChannelWritabilityChanged(invokeLater);
+        }
+        break;
+      }
+    }
   }
 
   public boolean getUserDefinedWritability(int index) {
@@ -237,26 +241,6 @@ public final class ChannelOutboundBuffer implements OutboundBuffer {
       if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
         if (oldValue == 0 && newValue != 0) {
           fireChannelWritabilityChanged(true);
-        }
-        break;
-      }
-    }
-  }
-
-  private static int writabilityMask(int index) {
-    if (index < 1 || index > 31) {
-      throw new IllegalArgumentException("index: " + index + " (expected: 1~31)");
-    }
-    return 1 << index;
-  }
-
-  private void setWritable(boolean invokeLater) {
-    for (; ; ) {
-      final int oldValue = unwritable;
-      final int newValue = oldValue & ~1;
-      if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
-        if (oldValue != 0 && newValue == 0) {
-          fireChannelWritabilityChanged(invokeLater);
         }
         break;
       }

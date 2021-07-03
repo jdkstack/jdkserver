@@ -46,11 +46,11 @@ public class ClientLoginAuthReqHandler extends ChannelDuplexHandler {
         String body = message.getBody();
         byte aByte = body.getBytes(StandardCharsets.UTF_8)[0];
         if (aByte != (byte) '0') {
-          //LOG.error("Login is not ok :{} ", message);
+          // LOG.error("Login is not ok :{} ", message);
           // 登陆失败,关闭连接
           ctx.close();
         } else {
-          //LOG.info("Login is ok :{} ", message);
+          // LOG.info("Login is ok :{} ", message);
         }
       }
     }
