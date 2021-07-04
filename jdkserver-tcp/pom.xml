@@ -7,6 +7,7 @@
   <modules>
     <module>jdkserver-tcp-api</module>
     <module>jdkserver-tcp-core</module>
+    <module>jdkserver-tcp-examples</module>
   </modules>
   <packaging>pom</packaging>
   <parent>

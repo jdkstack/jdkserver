@@ -3,7 +3,6 @@
   xmlns="http://maven.apache.org/POM/4.0.0"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <artifactId>jdkserver</artifactId>
-
   <build>
     <pluginManagement>
       <!--  1:统一管理插件版本 -->
@@ -145,11 +144,5 @@
     <maven.compiler.target>11</maven.compiler.target>
     <maven.compiler.compilerVersion>11</maven.compiler.compilerVersion>
   </properties>
-  <scm>
-    <connection>scm:git:git@github.com:jdkstack/jdklog.git</connection>
-    <developerConnection>scm:git:git@github.com:jdkstack/jdklog.git</developerConnection>
-    <tag>jdklog-11.0.11</tag>
-    <url>git@github.com:jdkstack/jdklog.git</url>
-  </scm>
   <version>11.0.1-SNAPSHOT</version>
 </project>

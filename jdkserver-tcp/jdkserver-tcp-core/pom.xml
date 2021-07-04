@@ -3,20 +3,6 @@
   xmlns="http://maven.apache.org/POM/4.0.0"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <artifactId>jdkserver-tcp-core</artifactId>
-  <dependencies>
-    <dependency>
-      <artifactId>netty-all</artifactId>
-      <groupId>io.netty</groupId>
-      <version>4.1.60.Final</version>
-    </dependency>
-
-    <dependency>
-      <artifactId>log4j-core</artifactId>
-      <groupId>org.apache.logging.log4j</groupId>
-      <version>2.13.3</version>
-    </dependency>
-  </dependencies>
-
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>jdkserver-tcp</artifactId>

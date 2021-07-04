@@ -1,0 +1,59 @@
+package study.network.core.socket;
+
+import study.core.future.AsyncResult;
+import study.core.future.Handler;
+import study.core.future.StudyFuture;
+import study.core.promise.StudyPromise;
+import study.core.promise.StudyPromiseImpl;
+
+/**
+ * 写流.
+ *
+ * <p>Another description after blank line.
+ *
+ * @author admin
+ */
+public interface WriteStream<T> {
+
+  WriteStream<T> exceptionHandler(Handler<Throwable> handler);
+
+  StudyFuture<Void> write(T data);
+
+  void write(T data, Handler<AsyncResult<Void>> handler);
+
+  default StudyFuture<Void> end() {
+    StudyPromise<Void> provide = new StudyPromiseImpl();
+    end(provide);
+    return provide.future();
+  }
+
+  void end(Handler<AsyncResult<Void>> handler);
+
+  default StudyFuture<Void> end(T data) {
+    StudyPromise<Void> provide = new StudyPromiseImpl();
+    end(data, provide);
+    return provide.future();
+  }
+
+  default void end(T data, Handler<AsyncResult<Void>> handler) {
+    if (handler != null) {
+      write(
+          data,
+          ar -> {
+            if (ar.succeeded()) {
+              end(handler);
+            } else {
+              handler.handle(ar);
+            }
+          });
+    } else {
+      end(data);
+    }
+  }
+
+  WriteStream<T> setWriteQueueMaxSize(int maxSize);
+
+  boolean writeQueueFull();
+
+  WriteStream<T> drainHandler(Handler<Void> handler);
+}
