@@ -9,16 +9,16 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
+import org.jdkstack.jdkserver.tcp.core.common.SocketUtils;
 import org.jdkstack.jdkserver.tcp.core.core.channel.AbstractJdkChannel;
 import org.jdkstack.jdkserver.tcp.core.core.channel.ChannelException;
+import org.jdkstack.jdkserver.tcp.core.core.codecs.Message;
+import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkByteToMessageDecoderHandler;
+import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkMessageToByteEncoderHandler;
 import org.jdkstack.jdkserver.tcp.core.core.handler.ChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.core.handler.DefaultChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.core.server.ServerChannelHandler;
 import org.jdkstack.jdkserver.tcp.core.core.server.ServerChannelReadWriteHandler;
-import org.jdkstack.jdkserver.tcp.core.core.codecs.Message;
-import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkByteToMessageDecoderHandler;
-import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkMessageToByteEncoderHandler;
-import org.jdkstack.jdkserver.tcp.core.common.SocketUtils;
 import org.jdkstack.jdkserver.tcp.core.future.Handler;
 
 public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBridgeChannel {
@@ -45,7 +45,7 @@ public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBri
       this.selectionKey = this.register();
       this.ctx = new DefaultChannelHandlerContext(socketChannel, serverChannelHandler);
       serverChannelHandler.setChannel(this);
-    } catch (IOException e) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
   }
@@ -233,7 +233,7 @@ public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBri
     if (readBytes > 0) {
       buffer.flip();
       int anInt = buffer.getInt();
-      //System.out.println("读取了多少字节???" + anInt);
+      // System.out.println("读取了多少字节???" + anInt);
       ByteBuffer body = ByteBuffer.allocate(anInt - 4);
       int readBytes1 = socketChannel.read(body);
       if (readBytes1 > 0) {

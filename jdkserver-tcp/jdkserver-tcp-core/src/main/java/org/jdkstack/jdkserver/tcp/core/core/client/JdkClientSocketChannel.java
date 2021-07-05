@@ -10,17 +10,16 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Set;
+import org.jdkstack.jdkserver.tcp.core.common.SocketUtils;
 import org.jdkstack.jdkserver.tcp.core.core.channel.AbstractJdkChannel;
 import org.jdkstack.jdkserver.tcp.core.core.channel.ChannelException;
-import org.jdkstack.jdkserver.tcp.core.core.handler.ChannelHandlerContext;
-import org.jdkstack.jdkserver.tcp.core.core.handler.DefaultChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.Constants;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.Message;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkByteToMessageDecoderHandler;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkMessageToByteEncoderHandler;
-import org.jdkstack.jdkserver.tcp.core.common.SocketUtils;
+import org.jdkstack.jdkserver.tcp.core.core.handler.ChannelHandlerContext;
+import org.jdkstack.jdkserver.tcp.core.core.handler.DefaultChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.future.Handler;
-
 
 public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkClientChannel {
   private final SocketChannel socketChannel = this.socketChannel();

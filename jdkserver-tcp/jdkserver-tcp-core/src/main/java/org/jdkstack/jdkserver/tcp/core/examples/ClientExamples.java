@@ -39,10 +39,10 @@ public class ClientExamples {
           new StudyRejectedPolicy());
 
   public static void main(String[] args) throws Exception {
+    System.setProperty("javax.net.debug", "all");
     SocketAddress remoteAddress = new InetSocketAddress("127.0.0.1", 20000);
     SocketAddress localAddress = new InetSocketAddress("127.0.0.1", 18000);
     JdkClientSocketChannel jdkClientSocketChannel = new JdkClientSocketChannel();
-
     JdkClientSocketChannelEventRunnable jdkClientSocketChannelWorker =
         new JdkClientSocketChannelEventRunnable(jdkClientSocketChannel);
     jdkClientSocketChannelWorker.connectEvent();

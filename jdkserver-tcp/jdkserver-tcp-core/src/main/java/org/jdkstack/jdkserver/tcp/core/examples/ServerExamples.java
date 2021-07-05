@@ -6,12 +6,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.jdkstack.jdkserver.tcp.core.core.server.JdkServerSocketChannelEventRunnable;
-import org.jdkstack.jdkserver.tcp.core.context.StudyRejectedPolicy;
 import org.jdkstack.jdkserver.tcp.core.context.Monitor;
+import org.jdkstack.jdkserver.tcp.core.context.StudyRejectedPolicy;
 import org.jdkstack.jdkserver.tcp.core.context.StudyThreadFactory;
 import org.jdkstack.jdkserver.tcp.core.context.ThreadMonitor;
 import org.jdkstack.jdkserver.tcp.core.core.server.JdkServerSocketChannel;
+import org.jdkstack.jdkserver.tcp.core.core.server.JdkServerSocketChannelEventRunnable;
 
 public class ServerExamples {
   /** 线程阻塞的最大时间时10秒.如果不超过15秒,打印warn.如果超过15秒打印异常堆栈. */
@@ -39,19 +39,12 @@ public class ServerExamples {
           new StudyRejectedPolicy());
 
   public static void main(String[] args) throws Exception {
-    // JdkServerSocketChannelMessageHandler jdkServerSocketChannelMessageHandler =
-    //    new JdkServerSocketChannelMessageHandler();
+    System.setProperty("javax.net.debug", "all");
     SocketAddress remoteAddress = new InetSocketAddress("127.0.0.1", 20000);
     JdkServerSocketChannel serverSocketChannel = new JdkServerSocketChannel();
-
     JdkServerSocketChannelEventRunnable jdkServerSocketChannelEventRunnable =
         new JdkServerSocketChannelEventRunnable(serverSocketChannel);
-
     LOG_PRODUCER.submit(jdkServerSocketChannelEventRunnable);
-
-    // JdkServerSocketChannelWorker jdkServerSocketChannelWorker =
-    // new JdkServerSocketChannelWorker(serverSocketChannel, jdkServerSocketChannelMessageHandler);
-    // LOG_CONSUMER.submit(jdkServerSocketChannelWorker);
     jdkServerSocketChannelEventRunnable.acceptEvent();
     jdkServerSocketChannelEventRunnable.bind(remoteAddress, 100);
     Thread.sleep(9999999);
