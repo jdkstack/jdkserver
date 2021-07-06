@@ -1,8 +1,9 @@
 package org.jdkstack.jdkserver.tcp.core.core.codecs;
 
 import java.nio.ByteBuffer;
-import org.jdkstack.jdkserver.tcp.core.core.handler.ChannelHandlerContext;
-import org.jdkstack.jdkserver.tcp.core.core.handler.ChannelInboundHandler;
+import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandlerContext;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelInboundHandler;
 
 public abstract class AbstractByteToMessageDecoderHandler<T> implements ChannelInboundHandler {
 

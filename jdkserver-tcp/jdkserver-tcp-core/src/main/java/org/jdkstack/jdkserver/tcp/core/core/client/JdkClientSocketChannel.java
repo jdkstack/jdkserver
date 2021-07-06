@@ -10,16 +10,16 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Set;
-import org.jdkstack.jdkserver.tcp.core.common.SocketUtils;
+import org.jdkstack.jdkserver.tcp.core.api.core.client.JdkClientChannel;
+import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandlerContext;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.Handler;
 import org.jdkstack.jdkserver.tcp.core.core.channel.AbstractJdkChannel;
 import org.jdkstack.jdkserver.tcp.core.core.channel.ChannelException;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.Constants;
-import org.jdkstack.jdkserver.tcp.core.core.codecs.Message;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkByteToMessageDecoderHandler;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkMessageToByteEncoderHandler;
-import org.jdkstack.jdkserver.tcp.core.core.handler.ChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.core.handler.DefaultChannelHandlerContext;
-import org.jdkstack.jdkserver.tcp.core.future.Handler;
 
 public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkClientChannel {
   private final SocketChannel socketChannel = this.socketChannel();
@@ -31,13 +31,13 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
       new NetworkMessageToByteEncoderHandler();
   private final NetworkByteToMessageDecoderHandler decoder =
       new NetworkByteToMessageDecoderHandler();
-  private final ClientChannelReadWriteHandler handler = new ClientChannelReadWriteHandler();
+  private final Handler<JdkClientSocketChannel> handler = new ClientChannelReadWriteHandler();
   private final ClientChannelHandler clientChannelHandler = new ClientChannelHandler(handler);
   protected final ChannelHandlerContext ctx =
       new DefaultChannelHandlerContext(socketChannel, clientChannelHandler);
 
   public JdkClientSocketChannel() {
-    clientChannelHandler.setChannel(this);
+    //
   }
 
   public final Selector openSelector() {
@@ -59,11 +59,13 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
   public boolean connect(final SocketAddress remoteAddress) throws Exception {
     boolean success = false;
     try {
-      final boolean connected = SocketUtils.connect(this.socketChannel, remoteAddress);
+      final boolean connected = this.socketChannel.connect(remoteAddress);
       if (!connected) {
         this.selectionKey.interestOps(SelectionKey.OP_CONNECT);
       }
       success = true;
+      // 客户端链接成功后,注册业务handler.
+      clientChannelHandler.setChannel(this);
       return connected;
     } finally {
       if (!success) {
@@ -84,11 +86,15 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
 
   public boolean connect(final SocketAddress remoteAddress, final SocketAddress localAddress)
       throws Exception {
-    SocketUtils.bind(this.socketChannel, localAddress);
+    // 绑定客户端IP.
+    this.socketChannel.bind(localAddress);
     boolean success = false;
     try {
-      final boolean connected = SocketUtils.connect(this.socketChannel, remoteAddress);
+      // 连接到服务端IP.
+      final boolean connected = this.socketChannel.connect(remoteAddress);
       success = true;
+      // 客户端链接成功后,注册业务handler.
+      clientChannelHandler.setChannel(this);
       return connected;
     } finally {
       if (!success) {
@@ -123,7 +129,7 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
 
   public void read(Handler<Message> handler) {
     //
-    ctx.setHandler(handler);
+    ctx.setReadHandler(handler);
   }
 
   @Override

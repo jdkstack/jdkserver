@@ -5,10 +5,9 @@ import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.UUID;
-import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkMessage;
-import org.jdkstack.jdkserver.tcp.core.core.bridge.JdkBridgeChannel;
-import org.jdkstack.jdkserver.tcp.core.core.bridge.JdkBridgeSocketChannel;
+import org.jdkstack.jdkserver.tcp.core.api.core.bridge.JdkBridgeChannel;
+import org.jdkstack.jdkserver.tcp.core.api.core.server.JdkServerChannel;
+import org.jdkstack.jdkserver.tcp.core.core.server.bridge.JdkBridgeSocketChannel;
 
 /**
  * This is a class description.
@@ -18,13 +17,11 @@ import org.jdkstack.jdkserver.tcp.core.core.bridge.JdkBridgeSocketChannel;
  * @author admin
  */
 public class JdkServerSocketChannelEventRunnable implements Runnable {
-  private JdkServerSocketChannel serverSocketChannel;
-  // private JdkServerSocketChannelMessageHandler messageHandler;
-  private volatile boolean isRun;
+  public JdkServerSocketChannel serverSocketChannel;
+  public volatile boolean isRun;
 
   public JdkServerSocketChannelEventRunnable(JdkServerSocketChannel serverSocketChannel) {
     this.serverSocketChannel = serverSocketChannel;
-    //  this.messageHandler = messageHandler;
   }
 
   /**
@@ -36,7 +33,7 @@ public class JdkServerSocketChannelEventRunnable implements Runnable {
    */
   @Override
   public final void run() {
-    while (!isRun()) {
+    while (!isRun) {
       // 获取当前服务器端channel接收到的的客户端事件.
       int events = 0;
       try {
@@ -84,7 +81,7 @@ public class JdkServerSocketChannelEventRunnable implements Runnable {
         }
       }
       // 清空当前的集合.
-      // keys.clear();
+      keys.clear();
     }
   }
 
@@ -92,6 +89,7 @@ public class JdkServerSocketChannelEventRunnable implements Runnable {
       SelectionKey key, int readyOps, JdkBridgeChannel jdkBridgeChannel) {
     // 如果key是有效的.
     if (key.isValid()) {
+      // 监听写事件(向客户端写).
       if ((readyOps & SelectionKey.OP_WRITE) != 0 || readyOps == 0) {
         try {
           jdkBridgeChannel.write(null);
@@ -100,9 +98,10 @@ public class JdkServerSocketChannelEventRunnable implements Runnable {
           jdkBridgeChannel.close();
         }
       }
-
-      if ((readyOps & (SelectionKey.OP_READ)) != 0 || readyOps == 0) {
+      // 监听读事件(从客户端读).
+      if ((readyOps & SelectionKey.OP_READ) != 0 || readyOps == 0) {
         try {
+          // 处理读事件.
           jdkBridgeChannel.read();
         } catch (final Exception e) {
           e.printStackTrace();
@@ -116,27 +115,22 @@ public class JdkServerSocketChannelEventRunnable implements Runnable {
       SelectionKey key, int readyOps, JdkServerChannel jdkServerChannel) {
     // 如果key是有效的.
     if (key.isValid()) {
-      if ((readyOps & (SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
-        JdkBridgeChannel jdkBridgeChannel =
-            new JdkBridgeSocketChannel(
-                serverSocketChannel.getServerSocketChannel(), serverSocketChannel.selector());
+      // 监听连接事件(接收客户端连接请求).
+      if ((readyOps & SelectionKey.OP_ACCEPT) != 0 || readyOps == 0) {
+        JdkBridgeChannel jdkBridgeChannel = null;
         try {
+          // 处理客户端连接.
+          jdkBridgeChannel =
+              new JdkBridgeSocketChannel(
+                  serverSocketChannel.getServerSocketChannel(), serverSocketChannel.selector());
+          // 注册服务端读事件.
           jdkBridgeChannel.readEventUp();
         } catch (final Exception e) {
           e.printStackTrace();
-          jdkBridgeChannel.close();
+          if (jdkBridgeChannel != null) {
+            jdkBridgeChannel.close();
+          }
         }
-        NetworkMessage msg = new NetworkMessage();
-        msg.setPriority(0);
-        msg.setSessionId(UUID.randomUUID().getMostSignificantBits());
-        msg.setType(121);
-        // 写数据不能太大,不超过1024,否则解码报错.原因暂时不知道,但可以肯定是读取数据时,长度出现问题.
-        // 通俗点说,是编码器包处理问题.目前采用应用数据包前四个字节保存应用数据包完整长度解决问题.最大数据包长度不能超过10KB,否则丢弃消息.
-        msg.setBody(
-            100000
-                + "我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻我是服务器端哦嘻");
-        msg.setLength(19999);
-        jdkBridgeChannel.write(msg);
       }
     }
   }

@@ -1,6 +1,8 @@
 package org.jdkstack.jdkserver.tcp.core.context;
 
 import java.util.concurrent.TimeUnit;
+import org.jdkstack.jdkserver.tcp.core.api.context.StudyContext;
+import org.jdkstack.jdkserver.tcp.core.api.context.StudyThreadImpl;
 
 /**
  * 自定义线程,便于系统内线程的监控,比如设置自定义的线程名,线程计数等.
@@ -9,7 +11,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author admin
  */
-public final class StudyThread extends Thread {
+public final class StudyThread extends Thread implements StudyThreadImpl {
 
   /** 线程类型. */
   private final int threadType;

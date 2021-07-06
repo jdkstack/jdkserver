@@ -5,6 +5,9 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import org.jdkstack.jdkserver.tcp.core.api.context.Monitor;
+import org.jdkstack.jdkserver.tcp.core.api.context.StudyThreadImpl;
+import org.jdkstack.jdkserver.tcp.core.api.context.WorkerContext;
 
 /**
  * 定时检查线程的运行时间.
@@ -17,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ThreadMonitor implements Monitor {
   /** 保存所有的线程,key是线程名字,value是线程. */
-  private final Map<String, StudyThread> threads = new WeakHashMap<>();
+  private final Map<String, StudyThreadImpl> threads = new WeakHashMap<>();
   /** 最大阻塞时间. */
   private final long blockTime;
 
@@ -44,7 +47,7 @@ public class ThreadMonitor implements Monitor {
    * @author admin
    */
   @Override
-  public void registerThread(final StudyThread thread) {
+  public void registerThread(final StudyThreadImpl thread) {
     threads.put(thread.getName(), thread);
   }
 
@@ -64,8 +67,8 @@ public class ThreadMonitor implements Monitor {
             // 当前系统时间毫秒数.
             long currentTimeMillis = System.currentTimeMillis();
             // 原打算使用异步的方式,但是感觉不太合理.
-            for (Map.Entry<String, StudyThread> entry : threads.entrySet()) {
-              StudyThread studyThread = entry.getValue();
+            for (Map.Entry<String, StudyThreadImpl> entry : threads.entrySet()) {
+              StudyThreadImpl studyThread = entry.getValue();
               // 线程开始执行时间的毫秒数.
               long execStart = studyThread.startTime();
               // 线程执行的时间.

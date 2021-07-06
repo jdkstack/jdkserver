@@ -2,6 +2,7 @@ package org.jdkstack.jdkserver.tcp.core.core.codecs;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
 
 /**
  * This is a class description.

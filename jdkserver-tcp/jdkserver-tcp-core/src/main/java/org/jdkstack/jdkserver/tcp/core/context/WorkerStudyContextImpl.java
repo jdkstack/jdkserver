@@ -2,8 +2,9 @@ package org.jdkstack.jdkserver.tcp.core.context;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-import org.jdkstack.jdkserver.tcp.core.future.Handler;
-import org.jdkstack.jdkserver.tcp.core.future.StudyFuture;
+import org.jdkstack.jdkserver.tcp.core.api.context.StudyWorker;
+import org.jdkstack.jdkserver.tcp.core.api.context.WorkerContext;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.Handler;
 
 /**
  * This is a class description.
@@ -53,10 +54,9 @@ public class WorkerStudyContextImpl extends AbstractStudyContext implements Work
    * @author admin
    */
   @Override
-  public <T> StudyFuture<T> executeInExecutorService(T event, Handler<T> handler) {
+  public <T> void executeInExecutorService(T event, Handler<T> handler) {
     Runnable task = () -> dispatch(event, handler);
     executorService.execute(task);
-    return null;
   }
 
   /**
@@ -67,10 +67,9 @@ public class WorkerStudyContextImpl extends AbstractStudyContext implements Work
    * @author admin
    */
   @Override
-  public <T> StudyFuture<T> executeInExecutorServiceWorker(T event, StudyWorker<T> handler) {
+  public <T> void executeInExecutorServiceWorker(T event, StudyWorker<T> handler) {
     Runnable task = () -> dispatch(event, handler);
     executorService.execute(task);
-    return null;
   }
 
   /**

@@ -10,8 +10,9 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Set;
+import org.jdkstack.jdkserver.tcp.core.api.core.channel.ChannelConfig;
+import org.jdkstack.jdkserver.tcp.core.api.core.server.JdkServerChannel;
 import org.jdkstack.jdkserver.tcp.core.core.channel.AbstractJdkChannel;
-import org.jdkstack.jdkserver.tcp.core.core.channel.ChannelConfig;
 import org.jdkstack.jdkserver.tcp.core.core.channel.ChannelException;
 
 public class JdkServerSocketChannel extends AbstractJdkChannel implements JdkServerChannel {

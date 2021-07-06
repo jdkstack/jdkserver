@@ -1,6 +1,8 @@
 package org.jdkstack.jdkserver.tcp.core.context;
 
-import org.jdkstack.jdkserver.tcp.core.future.Handler;
+import org.jdkstack.jdkserver.tcp.core.api.context.StudyContext;
+import org.jdkstack.jdkserver.tcp.core.api.context.StudyWorker;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.Handler;
 
 public abstract class AbstractStudyContext implements StudyContext {
 

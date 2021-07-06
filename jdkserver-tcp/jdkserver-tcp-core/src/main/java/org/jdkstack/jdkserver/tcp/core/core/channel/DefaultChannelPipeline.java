@@ -3,8 +3,10 @@ package org.jdkstack.jdkserver.tcp.core.core.channel;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.jdkstack.jdkserver.tcp.core.core.handler.ChannelHandler;
-import org.jdkstack.jdkserver.tcp.core.core.handler.ChannelHandlerContext;
+import org.jdkstack.jdkserver.tcp.core.api.core.channel.ChannelPipeline;
+import org.jdkstack.jdkserver.tcp.core.api.core.channel.JdkChannel;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandler;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandlerContext;
 
 public class DefaultChannelPipeline implements ChannelPipeline {
 

@@ -4,13 +4,12 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+import org.jdkstack.jdkserver.tcp.core.api.core.buffer.OutboundBuffer;
 import org.jdkstack.jdkserver.tcp.core.context.Constants;
 import org.jdkstack.jdkserver.tcp.core.core.water.WriteBufferWaterMark;
 
 /**
- * 日志消息阻塞队列,主要用于消息的短暂缓冲.
- *
- * <p>出站队列,向socket写数据之前,将写的数据缓冲在队列中.
+ * 出站队列,向socket写数据之前,将写的数据缓冲在队列中.
  *
  * @param <T> 泛型对象.
  * @author admin
@@ -91,7 +90,7 @@ public final class ChannelOutboundBuffer<T> implements OutboundBuffer<T> {
       final int newValue = oldValue | 1;
       if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
         if (oldValue == 0) {
-          // fireChannelWritabilityChanged();
+          //
         }
         break;
       }

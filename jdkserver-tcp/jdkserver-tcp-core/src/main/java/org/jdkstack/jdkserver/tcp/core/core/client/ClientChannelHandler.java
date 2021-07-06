@@ -1,7 +1,7 @@
 package org.jdkstack.jdkserver.tcp.core.core.client;
 
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.Handler;
 import org.jdkstack.jdkserver.tcp.core.core.handler.ChannelDuplexHandler;
-import org.jdkstack.jdkserver.tcp.core.future.Handler;
 
 public class ClientChannelHandler extends ChannelDuplexHandler {
   private Handler<JdkClientSocketChannel> handler;

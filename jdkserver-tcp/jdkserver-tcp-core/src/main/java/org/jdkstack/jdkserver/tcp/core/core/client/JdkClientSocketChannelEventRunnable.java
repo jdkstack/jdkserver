@@ -5,8 +5,7 @@ import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.UUID;
-import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkMessage;
+import org.jdkstack.jdkserver.tcp.core.api.core.client.JdkClientChannel;
 
 /**
  * This is a class description.
@@ -17,7 +16,6 @@ import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkMessage;
  */
 public class JdkClientSocketChannelEventRunnable implements Runnable {
   public JdkClientSocketChannel clientSocketChannel;
-  // public JdkServerSocketChannelMessageHandler messageHandler;
   public volatile boolean isRun;
 
   public JdkClientSocketChannelEventRunnable(JdkClientSocketChannel clientSocketChannel) {
@@ -33,7 +31,7 @@ public class JdkClientSocketChannelEventRunnable implements Runnable {
    */
   @Override
   public final void run() {
-    while (!isRun()) {
+    while (!isRun) {
       // 获取当前服务器端channel接收到的的客户端事件.
       int events = 0;
       try {
@@ -74,7 +72,7 @@ public class JdkClientSocketChannelEventRunnable implements Runnable {
         }
       }
       // 清空当前的集合.
-      // keys.clear();
+      keys.clear();
     }
   }
 
@@ -82,35 +80,24 @@ public class JdkClientSocketChannelEventRunnable implements Runnable {
       SelectionKey key, int readyOps, JdkClientChannel jdkClientChannel) {
     // 如果key是有效的.
     if (key.isValid()) {
+      // 监听连接事件(连接服务端事件).
       if ((readyOps & SelectionKey.OP_CONNECT) != 0 || readyOps == 0) {
         try {
+          // 客户端连接到服务端以后.
           int ops = key.interestOps();
           ops &= ~SelectionKey.OP_CONNECT;
+          // 卸载客户端连接事件.
           key.interestOps(ops);
+          // 客户端连接完成.
           jdkClientChannel.finishConnect();
-        } catch (final Exception e) {
-          e.printStackTrace();
-          jdkClientChannel.close();
-        }
-        try {
+          // 注册客户端读事件.
           jdkClientChannel.readEventUp();
         } catch (final Exception e) {
           e.printStackTrace();
           jdkClientChannel.close();
         }
-        NetworkMessage msg = new NetworkMessage();
-        msg.setPriority(0);
-        msg.setSessionId(UUID.randomUUID().getMostSignificantBits());
-        msg.setType(121);
-        // 写数据不能太大,不超过1024,否则解码报错.原因暂时不知道,但可以肯定是读取数据时,长度出现问题.
-        // 通俗点说,是编码器包处理问题.
-        msg.setBody(
-            100000
-                + "我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻");
-        msg.setLength(19999);
-        jdkClientChannel.write(msg);
       }
-
+      // 监听写事件(向服务端写).
       if ((readyOps & SelectionKey.OP_WRITE) != 0 || readyOps == 0) {
         try {
           jdkClientChannel.write(null);
@@ -119,9 +106,10 @@ public class JdkClientSocketChannelEventRunnable implements Runnable {
           jdkClientChannel.close();
         }
       }
-
-      if ((readyOps & (SelectionKey.OP_READ)) != 0 || readyOps == 0) {
+      // 监听读事件(从服务端读).
+      if ((readyOps & SelectionKey.OP_READ) != 0 || readyOps == 0) {
         try {
+          // 处理读事件.
           jdkClientChannel.read();
         } catch (final Exception e) {
           e.printStackTrace();

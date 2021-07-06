@@ -2,12 +2,14 @@ package org.jdkstack.jdkserver.tcp.core.core.codecs;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import org.jdkstack.jdkserver.tcp.core.core.handler.ChannelHandlerContext;
+import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandlerContext;
+import org.jdkstack.jdkserver.tcp.core.ssl.StudyException;
 
 /**
- * 网络消息解码器,用于自定义消息的生成.
+ * 解码器.
  *
- * <p>将ByteBuf(Netty)对象转换成NetworkMessage消息对象.
+ * <p>将ByteBuffer对象转换成Message消息对象.
  *
  * @author admin
  */
@@ -15,42 +17,77 @@ public class NetworkByteToMessageDecoderHandler
     extends AbstractByteToMessageDecoderHandler<Message> {
 
   /**
-   * 网络消息编码器,用于自定义消息的生成.
+   * 将ByteBuffer解码成Message.
    *
-   * <p>将消息对象NetworkMessage转换成ByteBuf(Netty)对象.
+   * <p>解码规则
    *
-   * @param ctx netty的处理器上下文.
-   * @param frame Netty buf对象.
-   * @param out out 包装NetworkMessage消息对象.
-   * @exception Exception 抛出所有异常,由Netty框架自己捕获处理.
+   * @param ctx 上下文.
+   * @param body 从channel读取到的字节buffer.
+   * @exception Exception 抛出所有异常.
    * @author admin
    */
   @Override
   protected Message decode(final ChannelHandlerContext ctx, final ByteBuffer body)
       throws Exception {
-    // 只处理单条消息.
+    // 按照编码规则进行解码.
     Message message = new NetworkMessage();
-    byte b = body.get();
-    int anInt1 = body.getInt();
-    int anInt2 = body.getInt();
-    long aLong = body.getLong();
-    int anInt11 = body.getInt();
-    int anInt21 = body.getInt();
-    long aLong1 = body.getLong();
-    int anInt211 = body.getInt();
-    int anInt2111 = body.getInt();
-    if (anInt2111 > 0) {
-      byte[] bytes111 = new byte[anInt2111];
-      body.get(bytes111);
-      message.setBody(new String(bytes111, StandardCharsets.UTF_8));
+    // 报文第一个字节必须是83.
+    byte start = body.get();
+    if (start != Constants.START) {
+      throw new StudyException("报文第一个字节不匹配" + Constants.START);
+    }
+    // CrcCode
+    int crcCode = body.getInt();
+    message.setCrcCode(crcCode);
+    // Length
+    int length = body.getInt();
+    message.setLength(length);
+    // SessionId
+    long sessionId = body.getLong();
+    message.setSessionId(sessionId);
+    // Type
+    int type = body.getInt();
+    message.setType(type);
+    // Priority
+    int priority = body.getInt();
+    message.setPriority(priority);
+    // createTime
+    long createTime = body.getLong();
+    message.setCreateTime(createTime);
+    // Timeout
+    int timeout = body.getInt();
+    message.setTimeout(timeout);
+    // bodyLength
+    int bodyLength = body.getInt();
+    if (bodyLength > 0) {
+      // body
+      byte[] bodyBytes = new byte[bodyLength];
+      body.get(bodyBytes);
+      message.setBody(new String(bodyBytes, StandardCharsets.UTF_8));
       message.setLength(body.capacity() + 4);
     }
-    int anInt21111 = body.getInt();
-
-    int anInt21111111 = body.getInt();
-    byte[] bytes1111111 = new byte[anInt21111111];
-    body.get(bytes1111111);
-    byte b1 = body.get();
+    // attachmentSize
+    int attachmentSize = body.getInt();
+    for (int i = 0; i < attachmentSize; i++) {
+      int keyLen = body.getInt();
+      byte[] key = new byte[keyLen];
+      body.get(key);
+      int valueLen = body.getInt();
+      byte[] value = new byte[valueLen];
+      body.get(value);
+      message.attachment(
+          new String(key, StandardCharsets.UTF_8), new String(value, StandardCharsets.UTF_8));
+    }
+    // customMsgLength
+    int customMsgLength = body.getInt();
+    // customMsg
+    byte[] customMsg = new byte[customMsgLength];
+    body.get(customMsg);
+    // 报文最后一个字节必须是89.
+    byte end = body.get();
+    if (end != Constants.END) {
+      throw new StudyException("报文最后一个字节不匹配" + Constants.END);
+    }
     return message;
   }
 }

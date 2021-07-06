@@ -4,13 +4,13 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
-import org.jdkstack.jdkserver.tcp.core.core.handler.ChannelHandlerContext;
-
+import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandlerContext;
 
 /**
- * 网络消息编码器,用于自定义消息的生成.
+ * 编码器.
  *
- * <p>将消息对象NetworkMessage转换成ByteBuf(Netty)对象.
+ * <p>将消息对象Message转换成ByteBuffer对象.
  *
  * @author admin
  */
@@ -18,19 +18,18 @@ public class NetworkMessageToByteEncoderHandler
     extends AbstractMessageToByteEncoderHandler<Message> {
 
   /**
-   * 网络消息编码器,用于自定义消息的生成.
+   * 将消息对象Message转换成ByteBuffer对象.
    *
-   * <p>将消息对象NetworkMessage转换成ByteBuf(Netty)对象.
+   * <p>编码规则
    *
-   * @param ctx netty的处理器上下文.
-   * @param msg NetworkMessage消息对象.
-   * @param buf Netty buf对象.
-   * @exception Exception 抛出所有异常,由Netty框架自己捕获处理.
+   * @param ctx 上下文.
+   * @param msg Message消息对象.
+   * @exception Exception 抛出所有异常.
    * @author admin
    */
   @Override
   protected ByteBuffer encode(final ChannelHandlerContext ctx, final Message msg) throws Exception {
-    int headerLength = 41;
+    // 计算整个消息报文长度.
     int bodyLength = 0;
     byte[] bodyBytes = null;
     final String body = msg.getBody();
@@ -60,7 +59,11 @@ public class NetworkMessageToByteEncoderHandler
     }
     final String customMsg = msg.getCustomMsg();
     final byte[] bytes = customMsg.getBytes(StandardCharsets.UTF_8);
+    // 自定义消息长度.
     int customMsgLength = bytes.length;
+    // 固定头部长度.
+    int headerLength = 41;
+    // 整个单行报文长度.
     int totalLength =
         headerLength
             + bodyLength
@@ -69,6 +72,7 @@ public class NetworkMessageToByteEncoderHandler
             + 1
             + 12
             + attachmentSize * 4 * 2;
+    // 用整个单行报文长度创建ByteBuffer() 报文总大小不能太大,目前没有限制,但是最好10KB以内.
     ByteBuffer buf = ByteBuffer.allocate(totalLength);
     // 单行报文的总长度.
     buf.putInt(totalLength);

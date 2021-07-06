@@ -1,9 +1,8 @@
 package org.jdkstack.jdkserver.tcp.core.core.client;
 
 import java.util.UUID;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.Handler;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkMessage;
-import org.jdkstack.jdkserver.tcp.core.future.Handler;
-import org.jdkstack.jdkserver.tcp.core.core.client.JdkClientSocketChannel;
 
 /**
  * This is a class description.
@@ -18,21 +17,29 @@ public class ClientChannelReadWriteHandler implements Handler<JdkClientSocketCha
 
   @Override
   public void handle(JdkClientSocketChannel connection) {
+    // 读取服务端发来的消息.
     connection.read(
         message -> {
           String body = message.getBody();
           System.out.println("客户接收到的数据:" + body);
+          // 收到服务端消息后,再回复服务端一条消息.
           NetworkMessage msg = new NetworkMessage();
           msg.setPriority(0);
           msg.setSessionId(UUID.randomUUID().getMostSignificantBits());
           msg.setType(121);
-          // 写数据不能太大,不超过1024,否则解码报错.原因暂时不知道,但可以肯定是读取数据时,长度出现问题.
-          // 通俗点说,是编码器包处理问题.
           msg.setBody(
               100000
                   + "我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻我是客户端哦嘻0");
           msg.setLength(19999);
           connection.write(msg);
         });
+    // 主动向服务端发一条消息.
+    NetworkMessage msg = new NetworkMessage();
+    msg.setPriority(0);
+    msg.setSessionId(UUID.randomUUID().getMostSignificantBits());
+    msg.setType(121);
+    msg.setBody("服务端你好,我是客户端.");
+    msg.setLength(19999);
+    connection.write(msg);
   }
 }

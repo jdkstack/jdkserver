@@ -9,16 +9,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import org.jdkstack.jdkserver.tcp.core.api.context.Monitor;
+import org.jdkstack.jdkserver.tcp.core.api.context.WorkerContext;
+import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandler;
 import org.jdkstack.jdkserver.tcp.core.context.StudyRejectedPolicy;
-import org.jdkstack.jdkserver.tcp.core.core.buffer.ChannelInboundBuffer;
-import org.jdkstack.jdkserver.tcp.core.core.buffer.ChannelOutboundBuffer;
-import org.jdkstack.jdkserver.tcp.core.core.codecs.Message;
-import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkMessage;
-import org.jdkstack.jdkserver.tcp.core.context.Monitor;
 import org.jdkstack.jdkserver.tcp.core.context.StudyThreadFactory;
 import org.jdkstack.jdkserver.tcp.core.context.ThreadMonitor;
-import org.jdkstack.jdkserver.tcp.core.context.WorkerContext;
 import org.jdkstack.jdkserver.tcp.core.context.WorkerStudyContextImpl;
+import org.jdkstack.jdkserver.tcp.core.core.buffer.ChannelInboundBuffer;
+import org.jdkstack.jdkserver.tcp.core.core.buffer.ChannelOutboundBuffer;
+import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkMessage;
 
 public class DefaultChannelHandlerContext extends AbstractChannelHandlerContext {
   /** 线程阻塞的最大时间时10秒.如果不超过15秒,打印warn.如果超过15秒打印异常堆栈. */
@@ -126,7 +127,7 @@ public class DefaultChannelHandlerContext extends AbstractChannelHandlerContext 
           channelInboundBuffer.decrementPendingOutboundBytes(bf.getLength());
           if (poll instanceof Message) {
             Message message = (Message) poll;
-            handler.handle(message);
+            readHandler.handle(message);
           } else if (poll instanceof ByteBuffer) {
             //
             ByteBuffer byteBuffer = (ByteBuffer) poll;
@@ -147,7 +148,7 @@ public class DefaultChannelHandlerContext extends AbstractChannelHandlerContext 
         buffer,
         event -> {
           // 向队列插入元素.
-          outboundBuffer.incrementPendingOutboundBytes(buffer.capacity());
+          channelOutboundBuffer.incrementPendingOutboundBytes(buffer.capacity());
           channelOutboundBuffer.enqueue(buffer);
         });
     // 消费.
@@ -157,7 +158,7 @@ public class DefaultChannelHandlerContext extends AbstractChannelHandlerContext 
           ByteBuffer poll = channelOutboundBuffer.poll();
           if (poll != null) {
             try {
-              outboundBuffer.decrementPendingOutboundBytes(poll.capacity());
+              channelOutboundBuffer.decrementPendingOutboundBytes(poll.capacity());
               int write = socketChannel.write(ByteBuffer.wrap(poll.array()));
             } catch (IOException e) {
               //

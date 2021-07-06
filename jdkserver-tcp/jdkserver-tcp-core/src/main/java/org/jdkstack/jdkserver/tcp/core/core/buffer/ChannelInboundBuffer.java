@@ -4,13 +4,12 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+import org.jdkstack.jdkserver.tcp.core.api.core.buffer.InboundBuffer;
 import org.jdkstack.jdkserver.tcp.core.context.Constants;
 import org.jdkstack.jdkserver.tcp.core.core.water.ReadBufferWaterMark;
 
 /**
- * 日志消息阻塞队列,主要用于消息的短暂缓冲.
- *
- * <p>入站队列,从socket读取数据后,将读取的数据缓冲在队列中.
+ * 入站队列,从socket读取数据后,将读取的数据缓冲在队列中.
  *
  * @param <T> 泛型对象.
  * @author admin
@@ -90,7 +89,7 @@ public class ChannelInboundBuffer<T> implements InboundBuffer<T> {
       final int newValue = oldValue | 1;
       if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
         if (oldValue == 0) {
-          // fireChannelWritabilityChanged();
+          //
         }
         break;
       }

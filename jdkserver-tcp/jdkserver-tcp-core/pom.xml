@@ -9,4 +9,11 @@
     <groupId>org.jdkstack</groupId>
     <version>11.0.1-SNAPSHOT</version>
   </parent>
+  <dependencies>
+    <dependency>
+      <groupId>org.jdkstack</groupId>
+      <artifactId>jdkserver-tcp-api</artifactId>
+      <version>11.0.1-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
 </project>

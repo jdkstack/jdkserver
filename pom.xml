@@ -130,9 +130,7 @@
   <groupId>org.jdkstack</groupId>
   <modelVersion>4.0.0</modelVersion>
   <modules>
-    <module>jdkserver-http</module>
     <module>jdkserver-tcp</module>
-    <module>jdkserver-udp</module>
   </modules>
   <packaging>pom</packaging>
   <properties>

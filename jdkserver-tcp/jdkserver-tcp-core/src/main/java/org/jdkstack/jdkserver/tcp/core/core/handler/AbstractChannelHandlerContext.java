@@ -1,19 +1,16 @@
 package org.jdkstack.jdkserver.tcp.core.core.handler;
 
 import java.nio.channels.SocketChannel;
-import org.jdkstack.jdkserver.tcp.core.core.buffer.ChannelOutboundBuffer;
-import org.jdkstack.jdkserver.tcp.core.core.codecs.Message;
-import org.jdkstack.jdkserver.tcp.core.future.Handler;
+import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandler;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandlerContext;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.Handler;
 
 public abstract class AbstractChannelHandlerContext implements ChannelHandlerContext {
-  protected ChannelOutboundBuffer<String> outboundBuffer = new ChannelOutboundBuffer<>();
-
   protected ChannelHandler channelHandler;
-
   protected SocketChannel socketChannel;
-
-  protected Handler<Message> handler;
-  protected Handler<Message> setWriteHandler;
+  protected Handler<Message> readHandler;
+  protected Handler<Message> writeHandler;
 
   protected AbstractChannelHandlerContext(
       SocketChannel socketChannel, ChannelHandler channelHandler) {
@@ -22,12 +19,12 @@ public abstract class AbstractChannelHandlerContext implements ChannelHandlerCon
   }
 
   @Override
-  public void setHandler(Handler<Message> handler) {
-    this.handler = handler;
+  public void setReadHandler(Handler<Message> handler) {
+    this.readHandler = handler;
   }
 
   @Override
-  public void setWriteHandler(Handler<Message> setWriteHandler) {
-    this.setWriteHandler = setWriteHandler;
+  public void setWriteHandler(Handler<Message> handler) {
+    this.writeHandler = handler;
   }
 }

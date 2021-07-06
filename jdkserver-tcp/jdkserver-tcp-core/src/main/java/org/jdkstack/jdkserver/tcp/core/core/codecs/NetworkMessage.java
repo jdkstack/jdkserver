@@ -7,4 +7,6 @@ package org.jdkstack.jdkserver.tcp.core.core.codecs;
  *
  * @author admin
  */
-public class NetworkMessage extends AbstractMessage {}
+public class NetworkMessage extends AbstractMessage {
+  //
+}
