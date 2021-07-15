@@ -7,9 +7,11 @@ public interface ChannelHandlerContext {
 
   void setReadHandler(Handler<Message> handler);
 
-  void setWriteHandler(Handler<Message> handler);
+  void setWriteHandler(Handler<ByteBuffer> handler);
 
   void handleWrite(final ByteBuffer buffer) throws Exception;
+
+  void handleWrite2(final ByteBuffer buffer) throws Exception;
 
   boolean isWritable();
 

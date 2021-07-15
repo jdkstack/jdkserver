@@ -100,7 +100,7 @@ public class JdkClientSocketChannelEventRunnable implements Runnable {
       // 监听写事件(向服务端写).
       if ((readyOps & SelectionKey.OP_WRITE) != 0 || readyOps == 0) {
         try {
-          jdkClientChannel.write(null);
+          jdkClientChannel.write3(null);
         } catch (final Exception e) {
           e.printStackTrace();
           jdkClientChannel.close();
@@ -110,7 +110,7 @@ public class JdkClientSocketChannelEventRunnable implements Runnable {
       if ((readyOps & SelectionKey.OP_READ) != 0 || readyOps == 0) {
         try {
           // 处理读事件.
-          jdkClientChannel.read();
+          jdkClientChannel.readHandler();
         } catch (final Exception e) {
           e.printStackTrace();
           jdkClientChannel.close();

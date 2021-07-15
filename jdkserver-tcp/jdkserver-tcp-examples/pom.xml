@@ -17,6 +17,11 @@
       <version>11.0.1-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <artifactId>jdklog-core</artifactId>
+      <groupId>org.jdkstack</groupId>
+      <version>11.0.11</version>
+    </dependency>
   </dependencies>
 
   <properties>

@@ -1,6 +1,5 @@
 package org.jdkstack.jdkserver.tcp.core.core.handler;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ExecutorService;
@@ -12,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 import org.jdkstack.jdkserver.tcp.core.api.context.Monitor;
 import org.jdkstack.jdkserver.tcp.core.api.context.WorkerContext;
 import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
-import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandler;
 import org.jdkstack.jdkserver.tcp.core.context.StudyRejectedPolicy;
 import org.jdkstack.jdkserver.tcp.core.context.StudyThreadFactory;
 import org.jdkstack.jdkserver.tcp.core.context.ThreadMonitor;
@@ -86,8 +84,8 @@ public class DefaultChannelHandlerContext extends AbstractChannelHandlerContext 
 
   protected ChannelOutboundBuffer<ByteBuffer> channelOutboundBuffer = new ChannelOutboundBuffer<>();
 
-  public DefaultChannelHandlerContext(SocketChannel socketChannel, ChannelHandler channelHandler) {
-    super(socketChannel, channelHandler);
+  public DefaultChannelHandlerContext(SocketChannel socketChannel) {
+    super(socketChannel);
   }
 
   static {
@@ -125,14 +123,14 @@ public class DefaultChannelHandlerContext extends AbstractChannelHandlerContext 
           Object poll = channelInboundBuffer.poll();
           NetworkMessage bf = (NetworkMessage) poll;
           channelInboundBuffer.decrementPendingOutboundBytes(bf.getLength());
-          if (poll instanceof Message) {
-            Message message = (Message) poll;
-            readHandler.handle(message);
-          } else if (poll instanceof ByteBuffer) {
-            //
-            ByteBuffer byteBuffer = (ByteBuffer) poll;
-            //
-          }
+          // if (poll instanceof Message) {
+          Message message = (Message) poll;
+          readHandler.handle(message);
+          //  } else if (poll instanceof ByteBuffer) {
+          //
+          // ByteBuffer byteBuffer = (ByteBuffer) poll;
+          //
+          // }
         });
   }
 
@@ -141,6 +139,23 @@ public class DefaultChannelHandlerContext extends AbstractChannelHandlerContext 
     return channelOutboundBuffer.isWritable();
   }
 
+  @Override
+  public void handleWrite2(final ByteBuffer buffer) throws Exception {
+    // 消费.
+    WRITE_CONSUMER_CONTEXT.executeInExecutorService(
+        () -> {
+          // 从队列获取元素.
+          ByteBuffer poll = channelOutboundBuffer.poll();
+          if (poll != null) {
+            try {
+              channelOutboundBuffer.decrementPendingOutboundBytes(poll.capacity());
+              writeHandler.handle(ByteBuffer.wrap(poll.array()));
+            } catch (Exception e) {
+              //
+            }
+          }
+        });
+  }
   @Override
   public void handleWrite(final ByteBuffer buffer) throws Exception {
     // 生产.
@@ -159,8 +174,8 @@ public class DefaultChannelHandlerContext extends AbstractChannelHandlerContext 
           if (poll != null) {
             try {
               channelOutboundBuffer.decrementPendingOutboundBytes(poll.capacity());
-              int write = socketChannel.write(ByteBuffer.wrap(poll.array()));
-            } catch (IOException e) {
+              writeHandler.handle(ByteBuffer.wrap(poll.array()));
+            } catch (Exception e) {
               //
             }
           }

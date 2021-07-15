@@ -11,19 +11,101 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Set;
 import org.jdkstack.jdkserver.tcp.core.api.core.channel.ChannelConfig;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.Handler;
 import org.jdkstack.jdkserver.tcp.core.api.core.server.JdkServerChannel;
 import org.jdkstack.jdkserver.tcp.core.core.channel.AbstractJdkChannel;
 import org.jdkstack.jdkserver.tcp.core.core.channel.ChannelException;
+import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkByteToMessageDecoderHandler;
+import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkMessageToByteEncoderHandler;
+import org.jdkstack.jdkserver.tcp.core.core.server.bridge.BridgeChannelHandler;
+import org.jdkstack.jdkserver.tcp.core.core.server.bridge.JdkBridgeSocketChannel;
 
 public class JdkServerSocketChannel extends AbstractJdkChannel implements JdkServerChannel {
-
-  private final ServerSocketChannel serverSocketChannel = this.serverSocketChannel();
-
-  private final ServerSocket serverSocket = this.serverSocketChannel.socket();
   private final SelectorProvider provider = SelectorProvider.provider();
+  private final ServerSocketChannel serverSocketChannel = this.serverSocketChannel();
+  private final ServerSocket serverSocket = this.serverSocketChannel.socket();
   private final Selector selector = this.openSelector();
   protected final SelectionKey selectionKey = this.register();
   private ChannelConfig config;
+
+  private NetworkMessageToByteEncoderHandler encoder;
+  private NetworkByteToMessageDecoderHandler decoder;
+  private Handler<JdkBridgeSocketChannel> handler;
+  private BridgeChannelHandler bridgeChannelHandler;
+
+  private Handler<JdkBridgeSocketChannel> handlerRead;
+  private Handler<JdkBridgeSocketChannel> handlerReadSsl;
+
+  private Handler<JdkBridgeSocketChannel> handlerWrite;
+  private Handler<JdkBridgeSocketChannel> handlerWriteSsl;
+
+  public void setConfig(ChannelConfig config) {
+    this.config = config;
+  }
+
+  public void setEncoder(NetworkMessageToByteEncoderHandler encoder) {
+    this.encoder = encoder;
+  }
+
+  public void setDecoder(NetworkByteToMessageDecoderHandler decoder) {
+    this.decoder = decoder;
+  }
+
+  public void setHandler(Handler<JdkBridgeSocketChannel> handler) {
+    this.handler = handler;
+  }
+
+  public void setBridgeChannelHandler(BridgeChannelHandler bridgeChannelHandler) {
+    this.bridgeChannelHandler = bridgeChannelHandler;
+  }
+
+  public Handler<JdkBridgeSocketChannel> getHandlerRead() {
+    return handlerRead;
+  }
+
+  public void setHandlerRead(Handler<JdkBridgeSocketChannel> handlerRead) {
+    this.handlerRead = handlerRead;
+  }
+
+  public Handler<JdkBridgeSocketChannel> getHandlerReadSsl() {
+    return handlerReadSsl;
+  }
+
+  public void setHandlerReadSsl(Handler<JdkBridgeSocketChannel> handlerReadSsl) {
+    this.handlerReadSsl = handlerReadSsl;
+  }
+
+  public Handler<JdkBridgeSocketChannel> getHandlerWrite() {
+    return handlerWrite;
+  }
+
+  public void setHandlerWrite(Handler<JdkBridgeSocketChannel> handlerWrite) {
+    this.handlerWrite = handlerWrite;
+  }
+
+  public Handler<JdkBridgeSocketChannel> getHandlerWriteSsl() {
+    return handlerWriteSsl;
+  }
+
+  public void setHandlerWriteSsl(Handler<JdkBridgeSocketChannel> handlerWriteSsl) {
+    this.handlerWriteSsl = handlerWriteSsl;
+  }
+
+  public NetworkMessageToByteEncoderHandler getEncoder() {
+    return encoder;
+  }
+
+  public NetworkByteToMessageDecoderHandler getDecoder() {
+    return decoder;
+  }
+
+  public Handler<JdkBridgeSocketChannel> getHandler() {
+    return handler;
+  }
+
+  public BridgeChannelHandler getBridgeChannelHandler() {
+    return bridgeChannelHandler;
+  }
 
   public final Selector openSelector() {
     try {
@@ -43,7 +125,7 @@ public class JdkServerSocketChannel extends AbstractJdkChannel implements JdkSer
 
   public final ServerSocketChannel serverSocketChannel() {
     try {
-      ServerSocketChannel serverSocketChannel = DEFAULT_SELECTOR_PROVIDER.openServerSocketChannel();
+      ServerSocketChannel serverSocketChannel = provider.openServerSocketChannel();
       serverSocketChannel.configureBlocking(false);
       return serverSocketChannel;
     } catch (IOException e) {
@@ -53,7 +135,8 @@ public class JdkServerSocketChannel extends AbstractJdkChannel implements JdkSer
 
   @Override
   public final void bind(final SocketAddress localAddress, final int backlog) throws Exception {
-    this.serverSocketChannel.bind(localAddress, backlog);
+    ServerSocket serverSocket = serverSocketChannel.socket();
+    serverSocket.bind(localAddress, backlog);
   }
 
   @Override

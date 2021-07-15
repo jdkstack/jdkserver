@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
 import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandlerContext;
-import org.jdkstack.jdkserver.tcp.core.ssl.StudyException;
+import org.jdkstack.jdkserver.tcp.core.ssl.certificate.StudyException;
 
 /**
  * 解码器.

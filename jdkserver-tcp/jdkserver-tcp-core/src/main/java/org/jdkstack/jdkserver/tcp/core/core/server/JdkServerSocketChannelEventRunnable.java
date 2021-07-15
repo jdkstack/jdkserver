@@ -20,6 +20,9 @@ public class JdkServerSocketChannelEventRunnable implements Runnable {
   public JdkServerSocketChannel serverSocketChannel;
   public volatile boolean isRun;
 
+  /** 0已经上线,1下线中,2已经下线 . */
+  public volatile int status;
+
   public JdkServerSocketChannelEventRunnable(JdkServerSocketChannel serverSocketChannel) {
     this.serverSocketChannel = serverSocketChannel;
   }
@@ -92,20 +95,20 @@ public class JdkServerSocketChannelEventRunnable implements Runnable {
       // 监听写事件(向客户端写).
       if ((readyOps & SelectionKey.OP_WRITE) != 0 || readyOps == 0) {
         try {
-          jdkBridgeChannel.write(null);
+          jdkBridgeChannel.write3(null);
         } catch (final Exception e) {
           e.printStackTrace();
-          jdkBridgeChannel.close();
+          jdkBridgeChannel.shutdown();
         }
       }
       // 监听读事件(从客户端读).
       if ((readyOps & SelectionKey.OP_READ) != 0 || readyOps == 0) {
         try {
           // 处理读事件.
-          jdkBridgeChannel.read();
+          jdkBridgeChannel.readHandler();
         } catch (final Exception e) {
           e.printStackTrace();
-          jdkBridgeChannel.close();
+          jdkBridgeChannel.shutdown();
         }
       }
     }
@@ -117,19 +120,16 @@ public class JdkServerSocketChannelEventRunnable implements Runnable {
     if (key.isValid()) {
       // 监听连接事件(接收客户端连接请求).
       if ((readyOps & SelectionKey.OP_ACCEPT) != 0 || readyOps == 0) {
-        JdkBridgeChannel jdkBridgeChannel = null;
+        JdkBridgeSocketChannel jdkBridgeChannel = null;
         try {
           // 处理客户端连接.
-          jdkBridgeChannel =
-              new JdkBridgeSocketChannel(
-                  serverSocketChannel.getServerSocketChannel(), serverSocketChannel.selector());
+          jdkBridgeChannel = new JdkBridgeSocketChannel(serverSocketChannel);
+          jdkBridgeChannel.finishConnect();
           // 注册服务端读事件.
           jdkBridgeChannel.readEventUp();
         } catch (final Exception e) {
           e.printStackTrace();
-          if (jdkBridgeChannel != null) {
-            jdkBridgeChannel.close();
-          }
+          jdkBridgeChannel.shutdown();
         }
       }
     }

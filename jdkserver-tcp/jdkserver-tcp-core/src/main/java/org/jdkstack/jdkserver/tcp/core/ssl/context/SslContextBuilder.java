@@ -1,4 +1,4 @@
-package org.jdkstack.jdkserver.tcp.core.ssl;
+package org.jdkstack.jdkserver.tcp.core.ssl.context;
 
 import java.io.IOException;
 import java.security.KeyStore;
@@ -18,6 +18,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSessionContext;
 import javax.net.ssl.TrustManagerFactory;
+import org.jdkstack.jdkserver.tcp.core.ssl.certificate.EmptyArrays;
 
 public final class SslContextBuilder {
 

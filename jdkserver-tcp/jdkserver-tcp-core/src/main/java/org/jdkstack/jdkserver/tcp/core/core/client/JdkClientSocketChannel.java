@@ -1,43 +1,111 @@
 package org.jdkstack.jdkserver.tcp.core.core.client;
 
+import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
+import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
+import java.security.SecureRandom;
 import java.util.Set;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import org.jdkstack.jdklog.logging.api.spi.Log;
+import org.jdkstack.jdklog.logging.core.factory.LogFactory;
 import org.jdkstack.jdkserver.tcp.core.api.core.client.JdkClientChannel;
 import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
 import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.api.core.handler.Handler;
 import org.jdkstack.jdkserver.tcp.core.core.channel.AbstractJdkChannel;
 import org.jdkstack.jdkserver.tcp.core.core.channel.ChannelException;
+import org.jdkstack.jdkserver.tcp.core.core.channel.ClientMode;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.Constants;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkByteToMessageDecoderHandler;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkMessageToByteEncoderHandler;
 import org.jdkstack.jdkserver.tcp.core.core.handler.DefaultChannelHandlerContext;
+import org.jdkstack.jdkserver.tcp.core.ssl.handler.SslHandler;
+import org.jdkstack.jdkserver.tcp.core.ssl.socket.SslSocketChannelInputStream;
+import org.jdkstack.jdkserver.tcp.core.ssl.socket.SslSocketChannelOutputStream;
 
 public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkClientChannel {
-  private final SocketChannel socketChannel = this.socketChannel();
+  /** . */
+  private static final Log LOG = LogFactory.getLog(JdkClientSocketChannel.class);
+
   private final SelectorProvider provider = SelectorProvider.provider();
+  private final SocketChannel socketChannel = this.socketChannel();
   private final Selector selector = this.openSelector();
   protected final SelectionKey selectionKey = this.register();
   private final Socket socket = this.socketChannel.socket();
-  private final NetworkMessageToByteEncoderHandler encoder =
-      new NetworkMessageToByteEncoderHandler();
-  private final NetworkByteToMessageDecoderHandler decoder =
-      new NetworkByteToMessageDecoderHandler();
-  private final Handler<JdkClientSocketChannel> handler = new ClientChannelReadWriteHandler();
-  private final ClientChannelHandler clientChannelHandler = new ClientChannelHandler(handler);
-  protected final ChannelHandlerContext ctx =
-      new DefaultChannelHandlerContext(socketChannel, clientChannelHandler);
+  private ChannelHandlerContext ctx = new DefaultChannelHandlerContext(socketChannel);
+  private NetworkMessageToByteEncoderHandler encoder;
+  private NetworkByteToMessageDecoderHandler decoder;
+  private Handler<JdkClientSocketChannel> handler;
+
+  private ClientChannelHandler clientChannelHandler;
+
+  private SslHandler sslStreams;
+
+  private InputStream inputStream;
+  private OutputStream outputStream;
+  private OutputStream tmpout;
+  private Handler<JdkClientSocketChannel> handlerRead;
+  private Handler<JdkClientSocketChannel> handlerReadSsl;
+
+  private Handler<JdkClientSocketChannel> handlerWrite;
+  private Handler<JdkClientSocketChannel> handlerWriteSsl;
+
+  public void setHandlerWrite(Handler<JdkClientSocketChannel> handlerWrite) {
+    this.handlerWrite = handlerWrite;
+  }
+
+  public void setHandlerWriteSsl(Handler<JdkClientSocketChannel> handlerWriteSsl) {
+    this.handlerWriteSsl = handlerWriteSsl;
+  }
+
+  public void setHandlerReadSsl(Handler<JdkClientSocketChannel> handlerReadSsl) {
+    this.handlerReadSsl = handlerReadSsl;
+  }
+
+  public void setHandlerRead(Handler<JdkClientSocketChannel> handlerRead) {
+    this.handlerRead = handlerRead;
+  }
+
+  public void setClientChannelHandler(ClientChannelHandler clientChannelHandler) {
+    this.clientChannelHandler = clientChannelHandler;
+  }
+
+  public void setEncoder(NetworkMessageToByteEncoderHandler encoder) {
+    this.encoder = encoder;
+  }
+
+  public void setDecoder(NetworkByteToMessageDecoderHandler decoder) {
+    this.decoder = decoder;
+  }
+
+  public void setHandler(Handler<JdkClientSocketChannel> handler) {
+    this.handler = handler;
+  }
 
   public JdkClientSocketChannel() {
-    //
+    // tcp 不延迟.
+    try {
+      this.socket.setTcpNoDelay(true);
+    } catch (SocketException e) {
+      e.printStackTrace();
+    }
   }
 
   public final Selector openSelector() {
@@ -64,14 +132,65 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
         this.selectionKey.interestOps(SelectionKey.OP_CONNECT);
       }
       success = true;
-      // 客户端链接成功后,注册业务handler.
-      clientChannelHandler.setChannel(this);
+      // handler.handle(this);
       return connected;
     } finally {
       if (!success) {
         this.close();
       }
     }
+  }
+
+  /**
+   * Creates the key managers required to initiate the {@link SSLContext}, using a JKS keystore as
+   * an input.
+   *
+   * @param filepath - the path to the JKS keystore.
+   * @param keystorePassword - the keystore's password.
+   * @param keyPassword - the key's passsword.
+   * @return {@link KeyManager} array that will be used to initiate the {@link SSLContext}.
+   * @throws Exception
+   */
+  protected static KeyManager[] createKeyManagers(
+      String filepath, String keystorePassword, String keyPassword) throws Exception {
+    KeyStore keyStore = KeyStore.getInstance("JKS");
+    InputStream keyStoreIS = new FileInputStream(filepath);
+    try {
+      keyStore.load(keyStoreIS, keystorePassword.toCharArray());
+    } finally {
+      if (keyStoreIS != null) {
+        keyStoreIS.close();
+      }
+    }
+    KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    kmf.init(keyStore, keyPassword.toCharArray());
+    return kmf.getKeyManagers();
+  }
+
+  /**
+   * Creates the trust managers required to initiate the {@link SSLContext}, using a JKS keystore as
+   * an input.
+   *
+   * @param filepath - the path to the JKS keystore.
+   * @param keystorePassword - the keystore's password.
+   * @return {@link TrustManager} array, that will be used to initiate the {@link SSLContext}.
+   * @throws Exception
+   */
+  protected static TrustManager[] createTrustManagers(String filepath, String keystorePassword)
+      throws Exception {
+    KeyStore trustStore = KeyStore.getInstance("JKS");
+    InputStream trustStoreIS = new FileInputStream(filepath);
+    try {
+      trustStore.load(trustStoreIS, keystorePassword.toCharArray());
+    } finally {
+      if (trustStoreIS != null) {
+        trustStoreIS.close();
+      }
+    }
+    TrustManagerFactory trustFactory =
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+    trustFactory.init(trustStore);
+    return trustFactory.getTrustManagers();
   }
 
   @Override
@@ -93,22 +212,12 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
       // 连接到服务端IP.
       final boolean connected = this.socketChannel.connect(remoteAddress);
       success = true;
-      // 客户端链接成功后,注册业务handler.
-      clientChannelHandler.setChannel(this);
+      // handler.handle(this);
       return connected;
     } finally {
       if (!success) {
         this.close();
       }
-    }
-  }
-
-  public void init() {
-    try {
-      // 将服务器端的channel设置成非阻塞.
-      this.socketChannel.configureBlocking(false);
-    } catch (IOException e) {
-      e.printStackTrace();
     }
   }
 
@@ -122,7 +231,7 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
     }
   }
 
-  public void write(Handler<Message> handler) {
+  public void write(Handler<ByteBuffer> handler) {
     //
     ctx.setWriteHandler(handler);
   }
@@ -130,6 +239,25 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
   public void read(Handler<Message> handler) {
     //
     ctx.setReadHandler(handler);
+  }
+
+  @Override
+  public void readSsl() throws Exception {
+    byte[] b = new byte[1024];
+    inputStream.read(b);
+    String s = new String(b, StandardCharsets.UTF_8);
+    LOG.error("客户接收到的数据:{}", s);
+    System.out.println(s);
+  }
+
+  @Override
+  public void readHandler() throws Exception {
+    if (handlerRead != null) {
+      handlerRead.handle(this);
+    }
+    if (handlerReadSsl != null) {
+      handlerReadSsl.handle(this);
+    }
   }
 
   @Override
@@ -160,8 +288,10 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
 
   public final SocketChannel socketChannel() {
     try {
-      SocketChannel socketChannel = DEFAULT_SELECTOR_PROVIDER.openSocketChannel();
+      SocketChannel socketChannel = provider.openSocketChannel();
       socketChannel.configureBlocking(false);
+      socketChannel.setOption(StandardSocketOptions.SO_SNDBUF, 1024 * 1000000);
+      socketChannel.setOption(StandardSocketOptions.SO_RCVBUF, 1024 * 1000000);
       return socketChannel;
     } catch (IOException e) {
       throw new ChannelException("Failed to open a socket.", e);
@@ -174,6 +304,39 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
       if (this.socketChannel != null) {
         this.socketChannel.close();
       }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Override
+  public void write1(ByteBuffer msg) {
+    try {
+      int write = socketChannel.write(msg);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Override
+  public void write3(Message msg) {
+    try {
+      ctx.handleWrite2(null);
+    } catch (Exception e) {
+      e.printStackTrace();
+      try {
+        socketChannel.close();
+      } catch (IOException ioException) {
+        ioException.printStackTrace();
+      }
+    }
+  }
+
+  @Override
+  public void writeSsl(Message msg) {
+    try {
+      tmpout.write(msg.getBody().getBytes(StandardCharsets.UTF_8));
+      tmpout.flush();
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -195,7 +358,31 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
 
   @Override
   public void finishConnect() throws IOException {
-    this.socketChannel.finishConnect();
+    if (socketChannel.isConnectionPending()) {
+      this.socketChannel.finishConnect();
+    }
+    try {
+      SSLContext context = SSLContext.getInstance("TLS");
+      context.init(
+          createKeyManagers("conf\\client.jks", "storepass", "keypass"),
+          createTrustManagers("conf\\trustedCerts.jks", "storepass"),
+          new SecureRandom());
+      sslStreams = new SslHandler(context, socketChannel, ClientMode.CLIENT);
+      inputStream = new SslSocketChannelInputStream(sslStreams);
+      outputStream = new SslSocketChannelOutputStream(sslStreams);
+      tmpout = new BufferedOutputStream(outputStream);
+      if (handler != null) {
+        handler.handle(this);
+      }
+      if (handlerWrite != null) {
+        handlerWrite.handle(this);
+      }
+      if (handlerWriteSsl != null) {
+        handlerWriteSsl.handle(this);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   public int getReceiveBufferSize() {
@@ -364,5 +551,11 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
         this.selectionKey.interestOps(interestOps | SelectionKey.OP_READ);
       }
     }
+    /* if (this.selectionKey.isValid()) {
+      final int interestOps = this.selectionKey.interestOps();
+      if ((interestOps & SelectionKey.OP_WRITE) == 0) {
+        this.selectionKey.interestOps(interestOps | SelectionKey.OP_WRITE);
+      }
+    }*/
   }
 }

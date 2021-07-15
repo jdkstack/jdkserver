@@ -1,4 +1,4 @@
-package org.jdkstack.jdkserver.tcp.core.ssl.cert;
+package org.jdkstack.jdkserver.tcp.core.ssl.certificate;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -37,9 +37,7 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509KeyManager;
 import org.jdkstack.jdkserver.tcp.core.option.KeystoreOptions;
 import org.jdkstack.jdkserver.tcp.core.option.TrustKeystoreOptions;
-import org.jdkstack.jdkserver.tcp.core.ssl.PrivateKeyParser;
-import org.jdkstack.jdkserver.tcp.core.ssl.SslContextBuilder;
-import org.jdkstack.jdkserver.tcp.core.ssl.StudyX509KeyManager;
+import org.jdkstack.jdkserver.tcp.core.ssl.context.SslContextBuilder;
 
 /**
  * 实现SSL.

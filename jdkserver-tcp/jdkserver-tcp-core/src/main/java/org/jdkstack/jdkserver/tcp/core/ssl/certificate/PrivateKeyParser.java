@@ -1,4 +1,4 @@
-package org.jdkstack.jdkserver.tcp.core.ssl;
+package org.jdkstack.jdkserver.tcp.core.ssl.certificate;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;

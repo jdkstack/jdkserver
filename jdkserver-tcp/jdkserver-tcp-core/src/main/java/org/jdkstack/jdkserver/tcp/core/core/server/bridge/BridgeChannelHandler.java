@@ -14,6 +14,5 @@ public class BridgeChannelHandler extends ChannelDuplexHandler {
 
   public void setChannel(JdkBridgeSocketChannel channel) {
     this.JdkBridgeSocketChannel = channel;
-    handler.handle(channel);
   }
 }
