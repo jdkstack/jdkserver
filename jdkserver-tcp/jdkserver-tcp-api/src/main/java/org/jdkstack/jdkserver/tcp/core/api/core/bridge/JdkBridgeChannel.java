@@ -19,6 +19,8 @@ public interface JdkBridgeChannel {
 
   void write3(Message msg);
 
+  void write2(ByteBuffer msg);
+
   void write1(ByteBuffer msg);
 
   void writeSsl(Message msg);

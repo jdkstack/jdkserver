@@ -8,11 +8,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.jdkstack.jdkserver.tcp.core.api.context.Monitor;
+import org.jdkstack.jdkserver.tcp.core.api.core.handler.Handler;
 import org.jdkstack.jdkserver.tcp.core.context.StudyRejectedPolicy;
 import org.jdkstack.jdkserver.tcp.core.context.StudyThreadFactory;
 import org.jdkstack.jdkserver.tcp.core.context.ThreadMonitor;
-import org.jdkstack.jdkserver.tcp.core.core.client.ClientChannelReadSslHandler;
-import org.jdkstack.jdkserver.tcp.core.core.client.ClientChannelWriteSslHandler;
+import org.jdkstack.jdkserver.tcp.core.core.client.ClientChannelReadHandler;
+import org.jdkstack.jdkserver.tcp.core.core.client.ClientChannelReadWriteHandler;
+import org.jdkstack.jdkserver.tcp.core.core.client.ClientChannelWriteHandler;
 import org.jdkstack.jdkserver.tcp.core.core.client.JdkClientSocketChannel;
 import org.jdkstack.jdkserver.tcp.core.core.client.JdkClientSocketChannelEventRunnable;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkByteToMessageDecoderHandler;
@@ -55,19 +57,23 @@ public class ClientExamples {
     NetworkByteToMessageDecoderHandler decoder = new NetworkByteToMessageDecoderHandler();
     jdkClientSocketChannel.setDecoder(decoder);
     // 设置非SSL读写处理器.
-    // Handler<JdkClientSocketChannel> handler = new ClientChannelReadWriteHandler();
-    // jdkClientSocketChannel.setHandler(handler);
-    // jdkClientSocketChannel.setHandlerRead(new ClientChannelReadHandler());
-    // jdkClientSocketChannel.setHandlerWrite(new ClientChannelWriteHandler());
+    Handler<JdkClientSocketChannel> handler = new ClientChannelReadWriteHandler();
+    jdkClientSocketChannel.setHandler(handler);
+    jdkClientSocketChannel.setHandlerRead(new ClientChannelReadHandler());
+    jdkClientSocketChannel.setHandlerWrite(new ClientChannelWriteHandler());
     // 设置SSL读写处理器.
-    jdkClientSocketChannel.setHandlerReadSsl(new ClientChannelReadSslHandler());
-    jdkClientSocketChannel.setHandlerWriteSsl(new ClientChannelWriteSslHandler());
+    // jdkClientSocketChannel.setHandlerReadSsl(new ClientChannelReadSslHandler());
+    // jdkClientSocketChannel.setHandlerWriteSsl(new ClientChannelWriteSslHandler());
     // 客户端事件处理任务.
     JdkClientSocketChannelEventRunnable jdkClientSocketChannelWorker =
         new JdkClientSocketChannelEventRunnable(jdkClientSocketChannel);
+    // 注册客户端连接事件.
     jdkClientSocketChannelWorker.connectEvent();
+    // 启动客户端,等待向服务端发起连接.
     jdkClientSocketChannelWorker.connect(remoteAddress);
+    // 提交任务到线程池.
     Future<?> submit = LOG_PRODUCER.submit(jdkClientSocketChannelWorker);
+    // 阻塞线程池退出.
     submit.get();
   }
 }

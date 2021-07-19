@@ -1,6 +1,5 @@
 package org.jdkstack.jdkserver.tcp.core.core.client;
 
-import java.nio.ByteBuffer;
 import org.jdkstack.jdklog.logging.api.spi.Log;
 import org.jdkstack.jdklog.logging.core.factory.LogFactory;
 import org.jdkstack.jdkserver.tcp.core.api.core.handler.Handler;
@@ -22,14 +21,10 @@ public class ClientChannelReadWriteHandler implements Handler<JdkClientSocketCha
   @Override
   public void handle(JdkClientSocketChannel connection) {
     // 1.注册写处理器.
-    connection.write(
-        new Handler<ByteBuffer>() {
-          @Override
-          public void handle(ByteBuffer event) {
-            // 发送原始数据编码后的消息.
-            connection.write1(event);
-          }
-        });
+    connection.write2(connection::write2);
+    // 1.注册写处理器.
+    // 发送原始数据编码后的消息.
+    connection.write(connection::write1);
     // 2.注册读处理器.
     connection.read(
         message -> {

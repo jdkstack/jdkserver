@@ -22,6 +22,8 @@ public interface OutboundBuffer<T> {
    */
   T poll();
 
+  T poll2();
+
   /**
    * This is a method description.
    *

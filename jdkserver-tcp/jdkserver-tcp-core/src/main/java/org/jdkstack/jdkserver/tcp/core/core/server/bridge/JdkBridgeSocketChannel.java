@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -26,13 +25,13 @@ import org.jdkstack.jdklog.logging.api.spi.Log;
 import org.jdkstack.jdklog.logging.core.factory.LogFactory;
 import org.jdkstack.jdkserver.tcp.core.api.core.bridge.JdkBridgeChannel;
 import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
-import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.api.core.handler.Handler;
 import org.jdkstack.jdkserver.tcp.core.core.channel.AbstractJdkChannel;
 import org.jdkstack.jdkserver.tcp.core.core.channel.ChannelException;
 import org.jdkstack.jdkserver.tcp.core.core.channel.ClientMode;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkByteToMessageDecoderHandler;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkMessageToByteEncoderHandler;
+import org.jdkstack.jdkserver.tcp.core.core.handler.AbstractChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.core.handler.DefaultChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.core.server.JdkServerSocketChannel;
 import org.jdkstack.jdkserver.tcp.core.ssl.handler.SslHandler;
@@ -48,7 +47,7 @@ public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBri
   private SocketChannel socketChannel;
   private Socket socket;
   private Selector selector;
-  private ChannelHandlerContext ctx;
+  private AbstractChannelHandlerContext ctx;
   private NetworkMessageToByteEncoderHandler encoder;
   private NetworkByteToMessageDecoderHandler decoder;
   private Handler<JdkBridgeSocketChannel> handler;
@@ -97,8 +96,8 @@ public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBri
       Selector selector = jdksocketChannel.selector();
       SocketChannel acceptSocketChannel = serverSocketChannel.accept();
       acceptSocketChannel.configureBlocking(false);
-      acceptSocketChannel.setOption(StandardSocketOptions.SO_SNDBUF, 1024 * 1000000);
-      acceptSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, 1024 * 1000000);
+      // acceptSocketChannel.setOption(StandardSocketOptions.SO_SNDBUF, 1024 * 1000000);
+      // acceptSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, 1024 * 1000000);
       this.socketChannel = acceptSocketChannel;
       this.socket = this.socketChannel.socket();
       // tcp 不延迟.
@@ -336,12 +335,12 @@ public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBri
         this.selectionKey.interestOps(interestOps | SelectionKey.OP_READ);
       }
     }
-    /* if (this.selectionKey.isValid()) {
+    if (this.selectionKey.isValid()) {
       final int interestOps = this.selectionKey.interestOps();
       if ((interestOps & SelectionKey.OP_WRITE) == 0) {
         this.selectionKey.interestOps(interestOps | SelectionKey.OP_WRITE);
       }
-    }*/
+    }
   }
 
   @Override
@@ -352,6 +351,11 @@ public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBri
         this.selectionKey.interestOps(interestOps & ~SelectionKey.OP_READ);
       }
     }
+  }
+
+  public void write2(Handler<ByteBuffer> handler) {
+    //
+    ctx.setWriteHandler2(handler);
   }
 
   public void write(Handler<ByteBuffer> handler) {
@@ -385,18 +389,24 @@ public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBri
 
   @Override
   public void read() throws Exception {
-    // 创建ByteBuffer，并开辟一个1k的缓冲区.
-    ByteBuffer buffer = ByteBuffer.allocate(4);
-    // 将通道的数据读取到缓冲区，read方法返回读取到的字节数.
-    int readBytes = socketChannel.read(buffer);
-    if (readBytes > 0) {
-      buffer.flip();
-      int anInt = buffer.getInt();
-      ByteBuffer body = ByteBuffer.allocate(anInt - 4);
-      int readBytes1 = socketChannel.read(body);
-      if (readBytes1 > 0) {
-        body.flip();
-        decoder.read(ctx, body);
+    while (true) {
+      // 创建ByteBuffer，并开辟一个1k的缓冲区.
+      ByteBuffer buffer = ByteBuffer.allocate(4);
+      // 将通道的数据读取到缓冲区，read方法返回读取到的字节数.
+      int messageHeader = socketChannel.read(buffer);
+      if (messageHeader > 0) {
+        buffer.flip();
+        // message Length.
+        int messageLength = buffer.getInt();
+        ByteBuffer messageBody = ByteBuffer.allocate(messageLength - 4);
+        //
+        int messageBodyLength = socketChannel.read(messageBody);
+        if (messageBodyLength > 0) {
+          messageBody.flip();
+          decoder.read(ctx, messageBody);
+        }
+      } else {
+        break;
       }
     }
   }
@@ -434,11 +444,61 @@ public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBri
   }
 
   @Override
-  public void write1(ByteBuffer msg) {
+  public void write2(ByteBuffer msg) {
     try {
-      int write = socketChannel.write(msg);
+      int attemptedBytes = msg.remaining();
+      final int localWrittenBytes = socketChannel.write(msg);
+      if (localWrittenBytes > 0) {
+        // LOG.error("服务端发送的数据:{}", localWrittenBytes);
+        /*if (!selectionKey.isValid()) {
+          return;
+        }
+        final int interestOps = selectionKey.interestOps();
+        if ((interestOps & SelectionKey.OP_WRITE) != 0) {
+          selectionKey.interestOps(interestOps & ~SelectionKey.OP_WRITE);
+        }*/
+        // selector.wakeup();
+      }
+
+      if (localWrittenBytes <= 0) {
+        //
+        ctx.getChannelOutboundBuffer2().enqueue(msg);
+      }
     } catch (IOException e) {
       e.printStackTrace();
+      try {
+        socketChannel.close();
+      } catch (IOException ioException) {
+        ioException.printStackTrace();
+      }
+    }
+  }
+
+  @Override
+  public void write1(ByteBuffer msg) {
+    try {
+      int attemptedBytes = msg.remaining();
+      final int localWrittenBytes = socketChannel.write(msg);
+      if (localWrittenBytes <= 0) {
+        ctx.getChannelOutboundBuffer2().enqueue(msg);
+        /*      if (!selectionKey.isValid()) {
+          return;
+        }
+        final int interestOps = selectionKey.interestOps();
+        if ((interestOps & SelectionKey.OP_WRITE) == 0) {
+          selectionKey.interestOps(interestOps | SelectionKey.OP_WRITE);
+        }*/
+        // selector.wakeup();
+      } else {
+        // LOG.error("服务端发送的数据:{}", localWrittenBytes);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+      try {
+        socketChannel.close();
+      } catch (IOException ioException) {
+        ioException.printStackTrace();
+      }
     }
   }
 

@@ -19,6 +19,7 @@ public class BridgeChannelReadWriteHandler implements Handler<JdkBridgeSocketCha
 
   @Override
   public void handle(JdkBridgeSocketChannel connection) {
+    connection.write2(connection::write2);
     connection.write(connection::write1);
     // 读取客户端发来的消息.
     connection.read(

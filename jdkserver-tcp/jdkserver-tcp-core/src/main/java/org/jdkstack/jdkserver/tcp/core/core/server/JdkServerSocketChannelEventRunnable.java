@@ -124,9 +124,19 @@ public class JdkServerSocketChannelEventRunnable implements Runnable {
         try {
           // 处理客户端连接.
           jdkBridgeChannel = new JdkBridgeSocketChannel(serverSocketChannel);
-          jdkBridgeChannel.finishConnect();
           // 注册服务端读事件.
           jdkBridgeChannel.readEventUp();
+          JdkBridgeSocketChannel finalJdkBridgeChannel = jdkBridgeChannel;
+          new Thread(new Runnable() {
+            @Override
+            public void run() {
+              try {
+                finalJdkBridgeChannel.finishConnect();
+              } catch (IOException e) {
+                e.printStackTrace();
+              }
+            }
+          }).start();
         } catch (final Exception e) {
           e.printStackTrace();
           jdkBridgeChannel.shutdown();

@@ -17,6 +17,8 @@ public interface JdkClientChannel extends JdkChannel {
 
   void close();
 
+  void write2(ByteBuffer msg);
+
   void write1(ByteBuffer msg);
 
   void write3(Message msg);

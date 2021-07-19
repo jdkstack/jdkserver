@@ -25,6 +25,11 @@ public class BridgeChannelReadHandler implements Handler<JdkBridgeSocketChannel>
       connection.read();
     } catch (Exception e) {
       e.printStackTrace();
+      try {
+        connection.close();
+      } catch (Exception exception) {
+        exception.printStackTrace();
+      }
     }
   }
 }

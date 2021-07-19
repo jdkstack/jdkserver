@@ -115,6 +115,10 @@ public final class ChannelOutboundBuffer<T> implements OutboundBuffer<T> {
     return null;
   }
 
+  @Override
+  public final T poll2() {
+    return this.queue.poll();
+  }
   /**
    * 将数据快速放入列队中,采用阻塞方法put.
    *

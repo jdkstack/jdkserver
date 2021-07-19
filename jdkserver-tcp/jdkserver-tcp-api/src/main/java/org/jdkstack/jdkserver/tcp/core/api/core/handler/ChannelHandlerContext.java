@@ -18,4 +18,6 @@ public interface ChannelHandlerContext {
   void handleRead(final Object msg) throws Exception;
 
   boolean isReadable();
+
+  void setWriteHandler2(Handler<ByteBuffer> handler);
 }

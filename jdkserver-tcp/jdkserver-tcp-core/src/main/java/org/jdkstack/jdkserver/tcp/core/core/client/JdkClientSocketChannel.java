@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
-import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -27,14 +26,13 @@ import org.jdkstack.jdklog.logging.api.spi.Log;
 import org.jdkstack.jdklog.logging.core.factory.LogFactory;
 import org.jdkstack.jdkserver.tcp.core.api.core.client.JdkClientChannel;
 import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
-import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.api.core.handler.Handler;
 import org.jdkstack.jdkserver.tcp.core.core.channel.AbstractJdkChannel;
 import org.jdkstack.jdkserver.tcp.core.core.channel.ChannelException;
 import org.jdkstack.jdkserver.tcp.core.core.channel.ClientMode;
-import org.jdkstack.jdkserver.tcp.core.core.codecs.Constants;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkByteToMessageDecoderHandler;
 import org.jdkstack.jdkserver.tcp.core.core.codecs.NetworkMessageToByteEncoderHandler;
+import org.jdkstack.jdkserver.tcp.core.core.handler.AbstractChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.core.handler.DefaultChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.ssl.handler.SslHandler;
 import org.jdkstack.jdkserver.tcp.core.ssl.socket.SslSocketChannelInputStream;
@@ -49,7 +47,7 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
   private final Selector selector = this.openSelector();
   protected final SelectionKey selectionKey = this.register();
   private final Socket socket = this.socketChannel.socket();
-  private ChannelHandlerContext ctx = new DefaultChannelHandlerContext(socketChannel);
+  private AbstractChannelHandlerContext ctx = new DefaultChannelHandlerContext(socketChannel);
   private NetworkMessageToByteEncoderHandler encoder;
   private NetworkByteToMessageDecoderHandler decoder;
   private Handler<JdkClientSocketChannel> handler;
@@ -246,7 +244,7 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
     byte[] b = new byte[1024];
     inputStream.read(b);
     String s = new String(b, StandardCharsets.UTF_8);
-    LOG.error("客户接收到的数据:{}", s);
+    // LOG.error("客户接收到的数据:{}", s);
     System.out.println(s);
   }
 
@@ -262,7 +260,27 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
 
   @Override
   public void read() throws Exception {
-    // 创建ByteBuffer，并开辟一个4字节的的缓冲区.
+    while (true) {
+      // 创建ByteBuffer，并开辟一个1k的缓冲区.
+      ByteBuffer buffer = ByteBuffer.allocate(4);
+      // 将通道的数据读取到缓冲区，read方法返回读取到的字节数.
+      int messageHeader = socketChannel.read(buffer);
+      if (messageHeader > 0) {
+        buffer.flip();
+        // message Length.
+        int messageLength = buffer.getInt();
+        ByteBuffer messageBody = ByteBuffer.allocate(messageLength - 4);
+        //
+        int messageBodyLength = socketChannel.read(messageBody);
+        if (messageBodyLength > 0) {
+          messageBody.flip();
+          decoder.read(ctx, messageBody);
+        }
+      } else {
+        break;
+      }
+    }
+    /*    // 创建ByteBuffer，并开辟一个4字节的的缓冲区.
     ByteBuffer buffer = ByteBuffer.allocate(Constants.LENGTH);
     // 将通道的数据读取到缓冲区,read方法返回读取到的字节数.
     int readLengthBytes = socketChannel.read(buffer);
@@ -283,15 +301,15 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
         // 对读取到的报文进行解码.
         decoder.read(ctx, body);
       }
-    }
+    }*/
   }
 
   public final SocketChannel socketChannel() {
     try {
       SocketChannel socketChannel = provider.openSocketChannel();
       socketChannel.configureBlocking(false);
-      socketChannel.setOption(StandardSocketOptions.SO_SNDBUF, 1024 * 1000000);
-      socketChannel.setOption(StandardSocketOptions.SO_RCVBUF, 1024 * 1000000);
+      // socketChannel.setOption(StandardSocketOptions.SO_SNDBUF, 1024 * 1000000);
+      // socketChannel.setOption(StandardSocketOptions.SO_RCVBUF, 1024 * 1000000);
       return socketChannel;
     } catch (IOException e) {
       throw new ChannelException("Failed to open a socket.", e);
@@ -309,12 +327,65 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
     }
   }
 
+  public void write2(Handler<ByteBuffer> handler) {
+    //
+    ctx.setWriteHandler2(handler);
+  }
+
+  @Override
+  public void write2(ByteBuffer msg) {
+    try {
+      int attemptedBytes = msg.remaining();
+      final int localWrittenBytes = socketChannel.write(msg);
+      if (localWrittenBytes > 0) {
+        // LOG.error("客户端发送的数据:{}", localWrittenBytes);
+        /*if (!selectionKey.isValid()) {
+          return;
+        }
+        final int interestOps = selectionKey.interestOps();
+        if ((interestOps & SelectionKey.OP_WRITE) != 0) {
+          selectionKey.interestOps(interestOps & ~SelectionKey.OP_WRITE);
+        }*/
+      }
+
+      if (localWrittenBytes <= 0) {
+        //
+        ctx.getChannelOutboundBuffer2().enqueue(msg);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+      try {
+        socketChannel.close();
+      } catch (IOException ioException) {
+        ioException.printStackTrace();
+      }
+    }
+  }
+
   @Override
   public void write1(ByteBuffer msg) {
     try {
-      int write = socketChannel.write(msg);
+      int attemptedBytes = msg.remaining();
+      final int localWrittenBytes = socketChannel.write(msg);
+      if (localWrittenBytes <= 0) {
+        ctx.getChannelOutboundBuffer2().enqueue(msg);
+        /*    if (!selectionKey.isValid()) {
+          return;
+        }
+        final int interestOps = selectionKey.interestOps();
+        if ((interestOps & SelectionKey.OP_WRITE) == 0) {
+          selectionKey.interestOps(interestOps | SelectionKey.OP_WRITE);
+        }*/
+      } else {
+        // LOG.error("客户端发送的数据:{}", localWrittenBytes);
+      }
     } catch (IOException e) {
       e.printStackTrace();
+      try {
+        socketChannel.close();
+      } catch (IOException ioException) {
+        ioException.printStackTrace();
+      }
     }
   }
 
@@ -551,11 +622,11 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
         this.selectionKey.interestOps(interestOps | SelectionKey.OP_READ);
       }
     }
-    /* if (this.selectionKey.isValid()) {
+    if (this.selectionKey.isValid()) {
       final int interestOps = this.selectionKey.interestOps();
       if ((interestOps & SelectionKey.OP_WRITE) == 0) {
         this.selectionKey.interestOps(interestOps | SelectionKey.OP_WRITE);
       }
-    }*/
+    }
   }
 }

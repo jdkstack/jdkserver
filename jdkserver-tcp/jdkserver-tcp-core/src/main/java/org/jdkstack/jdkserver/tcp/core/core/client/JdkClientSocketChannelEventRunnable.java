@@ -88,10 +88,22 @@ public class JdkClientSocketChannelEventRunnable implements Runnable {
           ops &= ~SelectionKey.OP_CONNECT;
           // 卸载客户端连接事件.
           key.interestOps(ops);
-          // 客户端连接完成.
-          jdkClientChannel.finishConnect();
           // 注册客户端读事件.
           jdkClientChannel.readEventUp();
+          new Thread(
+                  new Runnable() {
+                    @Override
+                    public void run() {
+                      // 客户端连接完成.
+                      try {
+                        jdkClientChannel.finishConnect();
+                      } catch (IOException e) {
+                        e.printStackTrace();
+                      }
+                    }
+                  })
+              .start();
+
         } catch (final Exception e) {
           e.printStackTrace();
           jdkClientChannel.close();

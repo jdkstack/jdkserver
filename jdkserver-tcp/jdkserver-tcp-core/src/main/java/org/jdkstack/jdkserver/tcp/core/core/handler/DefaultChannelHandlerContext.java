@@ -46,8 +46,8 @@ public class DefaultChannelHandlerContext extends AbstractChannelHandlerContext 
   /** 线程池. */
   private static final ExecutorService WRITE_PRODUCER =
       new ThreadPoolExecutor(
-          1,
-          1,
+          10,
+          10,
           0,
           TimeUnit.MILLISECONDS,
           new LinkedBlockingQueue<>(5000),
@@ -57,8 +57,8 @@ public class DefaultChannelHandlerContext extends AbstractChannelHandlerContext 
   /** 线程池. CallerRunsPolicy 拒绝策略不丢数据,因为在主线程上执行. */
   private static final ExecutorService WRITE_CONSUMER =
       new ThreadPoolExecutor(
-          1,
-          1,
+          10,
+          10,
           0,
           TimeUnit.MILLISECONDS,
           new LinkedBlockingQueue<>(5000),
@@ -79,10 +79,6 @@ public class DefaultChannelHandlerContext extends AbstractChannelHandlerContext 
   /** 工作任务上下文. */
   protected static final WorkerContext WRITE_CONSUMER_CONTEXT =
       new WorkerStudyContextImpl(WRITE_CONSUMER, SCHEDULED_EXECUTOR_SERVICE);
-
-  protected ChannelInboundBuffer<Object> channelInboundBuffer = new ChannelInboundBuffer<>();
-
-  protected ChannelOutboundBuffer<ByteBuffer> channelOutboundBuffer = new ChannelOutboundBuffer<>();
 
   public DefaultChannelHandlerContext(SocketChannel socketChannel) {
     super(socketChannel);
@@ -145,11 +141,11 @@ public class DefaultChannelHandlerContext extends AbstractChannelHandlerContext 
     WRITE_CONSUMER_CONTEXT.executeInExecutorService(
         () -> {
           // 从队列获取元素.
-          ByteBuffer poll = channelOutboundBuffer.poll();
+          ByteBuffer poll = channelOutboundBuffer2.poll2();
           if (poll != null) {
             try {
-              channelOutboundBuffer.decrementPendingOutboundBytes(poll.capacity());
-              writeHandler.handle(ByteBuffer.wrap(poll.array()));
+              channelOutboundBuffer2.decrementPendingOutboundBytes(poll.capacity());
+              writeHandler2.handle(ByteBuffer.wrap(poll.array()));
             } catch (Exception e) {
               //
             }

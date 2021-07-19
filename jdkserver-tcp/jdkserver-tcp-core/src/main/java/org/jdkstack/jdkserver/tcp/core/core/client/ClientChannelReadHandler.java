@@ -24,6 +24,7 @@ public class ClientChannelReadHandler implements Handler<JdkClientSocketChannel>
       connection.read();
     } catch (Exception e) {
       e.printStackTrace();
+      connection.close();
     }
   }
 }

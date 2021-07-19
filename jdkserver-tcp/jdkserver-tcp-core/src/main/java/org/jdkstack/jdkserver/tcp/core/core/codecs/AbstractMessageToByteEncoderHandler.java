@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
 import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandlerContext;
 import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelOutboundHandler;
+import org.jdkstack.jdkserver.tcp.core.core.buffer.ChannelInboundBuffer;
+import org.jdkstack.jdkserver.tcp.core.core.buffer.ChannelOutboundBuffer;
 
 public abstract class AbstractMessageToByteEncoderHandler<T> implements ChannelOutboundHandler {
 

@@ -22,13 +22,15 @@ public class ClientChannelWriteHandler implements Handler<JdkClientSocketChannel
 
   @Override
   public void handle(JdkClientSocketChannel connection) {
-    // 主动向服务端发一条消息.
-    NetworkMessage msg = new NetworkMessage();
-    msg.setPriority(0);
-    msg.setSessionId(UUID.randomUUID().getMostSignificantBits());
-    msg.setType(121);
-    msg.setBody("服务端你好,我是客户端.");
-    msg.setLength(19999);
-    connection.write(msg);
+    for (int i = 0; i <= 159900; i++) {
+      // 主动向服务端发一条消息.
+      NetworkMessage msg = new NetworkMessage();
+      msg.setPriority(0);
+      msg.setSessionId(UUID.randomUUID().getMostSignificantBits());
+      msg.setType(121);
+      msg.setBody("服务端你好,我是客户端." + i);
+      msg.setLength(19999);
+      connection.write(msg);
+    }
   }
 }
