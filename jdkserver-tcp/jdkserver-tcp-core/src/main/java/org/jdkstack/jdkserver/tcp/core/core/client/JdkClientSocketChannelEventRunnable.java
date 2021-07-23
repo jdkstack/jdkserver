@@ -90,20 +90,7 @@ public class JdkClientSocketChannelEventRunnable implements Runnable {
           key.interestOps(ops);
           // 注册客户端读事件.
           jdkClientChannel.readEventUp();
-          new Thread(
-                  new Runnable() {
-                    @Override
-                    public void run() {
-                      // 客户端连接完成.
-                      try {
-                        jdkClientChannel.finishConnect();
-                      } catch (IOException e) {
-                        e.printStackTrace();
-                      }
-                    }
-                  })
-              .start();
-
+          jdkClientChannel.finishConnect();
         } catch (final Exception e) {
           e.printStackTrace();
           jdkClientChannel.close();
