@@ -13,3 +13,6 @@
 ![no-cyclic-dependency](https://img.shields.io/badge/cyclic-dependency-red.svg)
 ![annotation-rate](https://img.shields.io/badge/annotation-rate-red.svg)
 ![(api/core)-lib](https://img.shields.io/badge/(api/core)-lib-red.svg)
+
+[![CodeFactor](https://www.codefactor.io/repository/github/jdkstack/jdkserver/badge/alpha)](https://www.codefactor.io/repository/github/jdkstack/jdkserver/overview/alpha)
+
