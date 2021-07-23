@@ -322,11 +322,6 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
     }
   }
 
-  public void write2(Handler<ByteBuffer> handler) {
-    //
-    ctx.setWriteHandler2(handler);
-  }
-
   @Override
   public void write2(ByteBuffer msg) {
     try {
@@ -355,6 +350,11 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
         ioException.printStackTrace();
       }
     }
+  }
+
+  public void write2(Handler<ByteBuffer> handler) {
+    //
+    ctx.setWriteHandler2(handler);
   }
 
   @Override
