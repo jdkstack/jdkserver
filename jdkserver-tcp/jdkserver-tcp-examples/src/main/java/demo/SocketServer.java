@@ -78,11 +78,9 @@ public class SocketServer {
           // socket closed or invalid / null key may happen if
           // the connection is closed inbetween the other thread
           // pinging this and the selector cycling
-          if (!change.isOpen())
-            continue;
+          if (!change.isOpen()) continue;
           key = change.keyFor(this.mSelector);
-          if (key == null || !key.isValid())
-            continue;
+          if (key == null || !key.isValid()) continue;
           key.interestOps(SelectionKey.OP_WRITE);
         }
         this.mWriteInterests.clear();
@@ -94,15 +92,11 @@ public class SocketServer {
       while (selectedKeys.hasNext()) {
         key = selectedKeys.next();
         selectedKeys.remove();
-        if (!key.isValid())
-          continue;
+        if (!key.isValid()) continue;
         // it seems the key has only one interest (never read+write), so a elseif is better here
-        if (key.isAcceptable())
-          this.accept(key);
-        else if (key.isReadable())
-          this.read(key);
-        else if (key.isWritable())
-          this.write(key);
+        if (key.isAcceptable()) this.accept(key);
+        else if (key.isReadable()) this.read(key);
+        else if (key.isWritable()) this.write(key);
       }
     }
   }
@@ -120,14 +114,15 @@ public class SocketServer {
     socket.setKeepAlive(true);
     socket.setTrafficClass(0x08 | 0x10);
 
-    final SocketControl socketControl = new SocketControl() {
+    final SocketControl socketControl =
+        new SocketControl() {
 
-      @SuppressWarnings("synthetic-access")
-      @Override
-      public void hintWrite() {
-        SocketServer.this.hintWrite(socketChannel);
-      }
-    };
+          @SuppressWarnings("synthetic-access")
+          @Override
+          public void hintWrite() {
+            SocketServer.this.hintWrite(socketChannel);
+          }
+        };
 
     // instead of a map of connections and workers, we attach the worker directly to the
     // key, thank you for the key.attach() api!
@@ -143,22 +138,19 @@ public class SocketServer {
     synchronized (this.mWriteInterests) {
       changed = this.mWriteInterests.add(socket);
     }
-    if (changed)
-      this.mSelector.wakeup();
+    if (changed) this.mSelector.wakeup();
   }
 
   private void read(final SelectionKey key) throws IOException {
     final SocketChannel socketChannel = (SocketChannel) key.channel();
-    final Worker worker = ( (Worker) key.attachment() );
+    final Worker worker = ((Worker) key.attachment());
     final ByteBuffer buf = worker.getReadBuffer();
-    if (buf.remaining() == 0)
-      System.err.println("buffer full BAD BAD BAD!"); // XXX
+    if (buf.remaining() == 0) System.err.println("buffer full BAD BAD BAD!"); // XXX
     else {
       int numRead;
       try {
         numRead = socketChannel.read(buf);
-      }
-      catch (final IOException e) {
+      } catch (final IOException e) {
         this.disconnect(key);
         return;
       }
@@ -173,7 +165,7 @@ public class SocketServer {
 
   private void write(final SelectionKey key) throws IOException {
     final SocketChannel socketChannel = (SocketChannel) key.channel();
-    final Worker worker = ( (Worker) key.attachment() );
+    final Worker worker = ((Worker) key.attachment());
     int wrote = 0;
     ByteBuffer buf;
     try {
@@ -188,18 +180,16 @@ public class SocketServer {
           // ... or the socket's buffer fills up
           break;
         }
-        //break;
+        // break;
       }
-    }
-    catch (final IOException e) {
+    } catch (final IOException e) {
       this.disconnect(key);
       return;
     }
     worker.parseWriteBuffer();
     // if no more data to write, switch it back to READ mode.
-    if (buf == null || buf.remaining() == 0)
-      key.interestOps(SelectionKey.OP_READ);
-    System.out.println("wrote " + wrote + " hasmore=" + ( buf != null && buf.remaining() != 0 ));
+    if (buf == null || buf.remaining() == 0) key.interestOps(SelectionKey.OP_READ);
+    System.out.println("wrote " + wrote + " hasmore=" + (buf != null && buf.remaining() != 0));
   }
 
   @SuppressWarnings("static-method")
@@ -213,16 +203,14 @@ public class SocketServer {
     key.cancel();
     key.channel().close();
     if (SocketServer.LOGGER.isLoggable(Level.INFO))
-      SocketServer.LOGGER.log(Level.INFO, "[" + socketChannel.socket().getRemoteSocketAddress() + "] Disconnected");
+      SocketServer.LOGGER.log(
+          Level.INFO, "[" + socketChannel.socket().getRemoteSocketAddress() + "] Disconnected");
   }
 
   private static interface SocketControl {
 
-    /**
-     * Hint the selector that there are bytes to write.
-     */
+    /** Hint the selector that there are bytes to write. */
     void hintWrite();
-
   }
 
   private static class Worker {
@@ -243,77 +231,83 @@ public class SocketServer {
     Worker(final SocketControl socketControl) {
       super();
       this.mSocketControl = socketControl;
-      final Runnable r = new Runnable() {
+      final Runnable r =
+          new Runnable() {
 
-        private final int test = 3;
+            private final int test = 3;
 
-        @SuppressWarnings("synthetic-access")
-        @Override
-        public void run() {
-          while (true) {
-            try {
+            @SuppressWarnings("synthetic-access")
+            @Override
+            public void run() {
               while (true) {
-                switch (this.test) {
-                  case 1: {
-                    // test case 1 simply writes back every incoming packet
-                    // expected and result values between 50 and 80MB/s in and out
-                    final ByteBuffer buf = Worker.this.mQueueIn.take();
-                    Worker.this.mQueueOut.put(buf);
-                    Worker.this.mSocketControl.hintWrite();
-                    break;
+                try {
+                  while (true) {
+                    switch (this.test) {
+                      case 1:
+                        {
+                          // test case 1 simply writes back every incoming packet
+                          // expected and result values between 50 and 80MB/s in and out
+                          final ByteBuffer buf = Worker.this.mQueueIn.take();
+                          Worker.this.mQueueOut.put(buf);
+                          Worker.this.mSocketControl.hintWrite();
+                          break;
+                        }
+                      case 2:
+                        {
+                          // test case 2 writes back every incoming packet as a double-sized packet
+                          // expected values ?
+                          // result failed read and write
+                          final ByteBuffer buf = Worker.this.mQueueIn.take();
+                          final ByteBuffer buf2 = ByteBuffer.allocate(buf.remaining() * 2);
+                          buf2.put(buf);
+                          buf.flip();
+                          buf2.put(buf);
+                          buf2.flip();
+                          Worker.this.mQueueOut.put(buf2);
+                          Worker.this.mSocketControl.hintWrite();
+                          break;
+                        }
+                      case 3:
+                        {
+                          // test case 3 writes back every incoming packet as a two similar packets
+                          // expected values ?
+                          // result failed read and write
+                          final ByteBuffer buf = Worker.this.mQueueIn.take();
+                          final ByteBuffer buf2 = ByteBuffer.allocate(buf.remaining());
+                          buf2.put(buf);
+                          buf.flip();
+                          buf2.flip();
+                          Worker.this.mQueueOut.put(buf);
+                          Worker.this.mSocketControl.hintWrite();
+                          Worker.this.mQueueOut.put(buf2);
+                          Worker.this.mSocketControl.hintWrite();
+                          break;
+                        }
+                      case 4:
+                        {
+                          // test case 4 writes back every incoming packet as a half sized packets
+                          // expected and result values between 50 and 80MB/s in and exactly half
+                          // out
+                          final ByteBuffer buf = Worker.this.mQueueIn.take();
+                          final ByteBuffer buf2 = ByteBuffer.allocate(buf.remaining() / 2);
+                          buf.limit(buf.remaining() / 2);
+                          buf2.put(buf);
+                          buf2.flip();
+                          Worker.this.mQueueOut.put(buf2);
+                          Worker.this.mSocketControl.hintWrite();
+                          break;
+                        }
+                      default:
+                        break;
+                    }
                   }
-                  case 2: {
-                    // test case 2 writes back every incoming packet as a double-sized packet
-                    // expected values ?
-                    // result failed read and write
-                    final ByteBuffer buf = Worker.this.mQueueIn.take();
-                    final ByteBuffer buf2 = ByteBuffer.allocate(buf.remaining() * 2);
-                    buf2.put(buf);
-                    buf.flip();
-                    buf2.put(buf);
-                    buf2.flip();
-                    Worker.this.mQueueOut.put(buf2);
-                    Worker.this.mSocketControl.hintWrite();
-                    break;
-                  }
-                  case 3: {
-                    // test case 3 writes back every incoming packet as a two similar packets
-                    // expected values ?
-                    // result failed read and write
-                    final ByteBuffer buf = Worker.this.mQueueIn.take();
-                    final ByteBuffer buf2 = ByteBuffer.allocate(buf.remaining());
-                    buf2.put(buf);
-                    buf.flip();
-                    buf2.flip();
-                    Worker.this.mQueueOut.put(buf);
-                    Worker.this.mSocketControl.hintWrite();
-                    Worker.this.mQueueOut.put(buf2);
-                    Worker.this.mSocketControl.hintWrite();
-                    break;
-                  }
-                  case 4: {
-                    // test case 4 writes back every incoming packet as a half sized packets
-                    // expected and result values between 50 and 80MB/s in and exactly half out
-                    final ByteBuffer buf = Worker.this.mQueueIn.take();
-                    final ByteBuffer buf2 = ByteBuffer.allocate(buf.remaining() / 2);
-                    buf.limit(buf.remaining() / 2);
-                    buf2.put(buf);
-                    buf2.flip();
-                    Worker.this.mQueueOut.put(buf2);
-                    Worker.this.mSocketControl.hintWrite();
-                    break;
-                  }
+                } catch (final Throwable t) {
+                  if (t instanceof InterruptedException) return;
+                  t.printStackTrace();
                 }
               }
             }
-            catch (final Throwable t) {
-              if (t instanceof InterruptedException)
-                return;
-              t.printStackTrace();
-            }
-          }
-        }
-      };
+          };
       this.mThread = new Thread(r);
       this.mThread.start();
     }
@@ -327,8 +321,7 @@ public class SocketServer {
       // each read will increase the .position() until it reaches .limit()
       // which in this case is the same as .capacity, and hence remaining==0
       // happens when position=limit=capacity
-      if (this.mReadBuf.remaining() != 0)
-        return;
+      if (this.mReadBuf.remaining() != 0) return;
       // flip switches position to 0 and limit to capacity, so we can read it
       this.mReadBuf.flip();
       // duplicate the bytebuffer
@@ -363,7 +356,5 @@ public class SocketServer {
         this.mThread.interrupt();
       }
     }
-
   }
-
 }
