@@ -117,10 +117,20 @@ public class JdkServerSocketChannel extends AbstractJdkChannel implements JdkSer
 
   public final SelectionKey register() {
     try {
-      return this.serverSocketChannel.register(this.selector, 0, this); // SelectionKey.OP_ACCEPT
+      return this.serverSocketChannel.register(this.selector, 0, this);
     } catch (IOException e) {
       throw new ChannelException("Failed to open a server socket.", e);
     }
+  }
+
+  @Override
+  public final SelectionKey register(final Selector selector, final int ops) {
+    try {
+      return this.serverSocketChannel.register(selector, ops);
+    } catch (ClosedChannelException e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 
   public final ServerSocketChannel serverSocketChannel() {
@@ -137,16 +147,6 @@ public class JdkServerSocketChannel extends AbstractJdkChannel implements JdkSer
   public final void bind(final SocketAddress localAddress, final int backlog) throws Exception {
     ServerSocket serverSocket = serverSocketChannel.socket();
     serverSocket.bind(localAddress, backlog);
-  }
-
-  @Override
-  public final SelectionKey register(final Selector selector, final int ops) {
-    try {
-      return this.serverSocketChannel.register(selector, ops);
-    } catch (ClosedChannelException e) {
-      e.printStackTrace();
-    }
-    return null;
   }
 
   @Override

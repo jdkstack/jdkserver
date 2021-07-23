@@ -197,12 +197,11 @@ public final class SslContextBuilder {
       String keyAlgorithm,
       PrivateKey key,
       String keyPassword,
-      KeyManagerFactory kmf,
-      String keyStore)
+      KeyManagerFactory kmf)
       throws KeyStoreException, NoSuchAlgorithmException, IOException, CertificateException,
-          UnrecoverableKeyException {
+      UnrecoverableKeyException {
     char[] keyPasswordChars = keyStorePassword(keyPassword);
-    KeyStore ks = buildKeyStore(certChainFile, key, keyPasswordChars, keyStore);
+    KeyStore ks = buildKeyStore(certChainFile, key, keyPasswordChars, KeyStore.getDefaultType());
     return buildKeyManagerFactory(ks, keyAlgorithm, keyPasswordChars, kmf);
   }
 
@@ -211,11 +210,12 @@ public final class SslContextBuilder {
       String keyAlgorithm,
       PrivateKey key,
       String keyPassword,
-      KeyManagerFactory kmf)
+      KeyManagerFactory kmf,
+      String keyStore)
       throws KeyStoreException, NoSuchAlgorithmException, IOException, CertificateException,
           UnrecoverableKeyException {
     char[] keyPasswordChars = keyStorePassword(keyPassword);
-    KeyStore ks = buildKeyStore(certChainFile, key, keyPasswordChars, KeyStore.getDefaultType());
+    KeyStore ks = buildKeyStore(certChainFile, key, keyPasswordChars, keyStore);
     return buildKeyManagerFactory(ks, keyAlgorithm, keyPasswordChars, kmf);
   }
 

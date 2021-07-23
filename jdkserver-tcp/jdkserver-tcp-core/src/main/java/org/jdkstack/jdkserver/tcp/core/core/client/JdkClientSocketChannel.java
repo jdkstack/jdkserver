@@ -122,23 +122,6 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
     }
   }
 
-  public boolean connect(final SocketAddress remoteAddress) throws Exception {
-    boolean success = false;
-    try {
-      final boolean connected = this.socketChannel.connect(remoteAddress);
-      if (!connected) {
-        this.selectionKey.interestOps(SelectionKey.OP_CONNECT);
-      }
-      success = true;
-      // handler.handle(this);
-      return connected;
-    } finally {
-      if (!success) {
-        this.close();
-      }
-    }
-  }
-
   /**
    * Creates the key managers required to initiate the {@link SSLContext}, using a JKS keystore as
    * an input.
@@ -201,6 +184,23 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
     }
   }
 
+  public boolean connect(final SocketAddress remoteAddress) throws Exception {
+    boolean success = false;
+    try {
+      final boolean connected = this.socketChannel.connect(remoteAddress);
+      if (!connected) {
+        this.selectionKey.interestOps(SelectionKey.OP_CONNECT);
+      }
+      success = true;
+      // handler.handle(this);
+      return connected;
+    } finally {
+      if (!success) {
+        this.close();
+      }
+    }
+  }
+
   public boolean connect(final SocketAddress remoteAddress, final SocketAddress localAddress)
       throws Exception {
     // 绑定客户端IP.
@@ -229,11 +229,6 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
     }
   }
 
-  public void read(Handler<Message> handler) {
-    //
-    ctx.setReadHandler(handler);
-  }
-
   @Override
   public void readSsl() throws Exception {
     byte[] b = new byte[1024];
@@ -251,6 +246,11 @@ public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkCli
     if (handlerReadSsl != null) {
       handlerReadSsl.handle(this);
     }
+  }
+
+  public void read(Handler<Message> handler) {
+    //
+    ctx.setReadHandler(handler);
   }
 
   @Override

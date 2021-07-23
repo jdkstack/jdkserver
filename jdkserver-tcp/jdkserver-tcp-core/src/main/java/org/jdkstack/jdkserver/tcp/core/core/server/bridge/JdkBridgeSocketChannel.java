@@ -353,21 +353,6 @@ public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBri
     }
   }
 
-  public void write2(Handler<ByteBuffer> handler) {
-    //
-    ctx.setWriteHandler2(handler);
-  }
-
-  public void write(Handler<ByteBuffer> handler) {
-    //
-    ctx.setWriteHandler(handler);
-  }
-
-  public void read(Handler<Message> handler) {
-    //
-    ctx.setReadHandler(handler);
-  }
-
   @Override
   public void readSsl() throws Exception {
     byte[] b = new byte[1024];
@@ -385,6 +370,11 @@ public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBri
     if (handlerReadSsl != null) {
       handlerReadSsl.handle(this);
     }
+  }
+
+  public void read(Handler<Message> handler) {
+    //
+    ctx.setReadHandler(handler);
   }
 
   @Override
@@ -441,6 +431,11 @@ public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBri
         ioException.printStackTrace();
       }
     }
+  }
+
+  public void write2(Handler<ByteBuffer> handler) {
+    //
+    ctx.setWriteHandler2(handler);
   }
 
   @Override
@@ -510,6 +505,11 @@ public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBri
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  public void write(Handler<ByteBuffer> handler) {
+    //
+    ctx.setWriteHandler(handler);
   }
 
   @Override

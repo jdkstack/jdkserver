@@ -227,6 +227,8 @@ public class SslHandler {
             }
             assert tmp.position() == 0;
             break;
+          default:
+            break;
         }
         hs_status = r.result.getHandshakeStatus();
       }

@@ -13,6 +13,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
   private LinkedList<ChannelHandler> channelHandlerList = new LinkedList<>();
 
   @Override
+  public ChannelPipeline addFirst(ChannelHandler... handlers) {
+    return null;
+  }
+
+  @Override
   public ChannelPipeline addFirst(String name, ChannelHandler handler) {
     channelHandlerList.addFirst(handler);
     return this;
@@ -21,11 +26,6 @@ public class DefaultChannelPipeline implements ChannelPipeline {
   @Override
   public ChannelPipeline addLast(String name, ChannelHandler handler) {
     channelHandlerList.addLast(handler);
-    return null;
-  }
-
-  @Override
-  public ChannelPipeline addFirst(ChannelHandler... handlers) {
     return null;
   }
 

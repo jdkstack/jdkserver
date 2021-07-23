@@ -7,11 +7,11 @@ import org.jdkstack.jdkserver.tcp.core.api.core.handler.ChannelHandlerContext;
 
 public interface ChannelPipeline {
 
+  ChannelPipeline addFirst(ChannelHandler... handlers);
+
   ChannelPipeline addFirst(String name, ChannelHandler handler);
 
   ChannelPipeline addLast(String name, ChannelHandler handler);
-
-  ChannelPipeline addFirst(ChannelHandler... handlers);
 
   ChannelPipeline addLast(ChannelHandler... handlers);
 
