@@ -206,6 +206,18 @@ public final class SslContextBuilder {
   }
 
   static KeyManagerFactory buildKeyManagerFactory(
+      KeyStore ks, String keyAlgorithm, char[] keyPasswordChars, KeyManagerFactory kmf)
+      throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
+    // Set up key manager factory to use our key store
+    if (kmf == null) {
+      kmf = KeyManagerFactory.getInstance(keyAlgorithm);
+    }
+    kmf.init(ks, keyPasswordChars);
+
+    return kmf;
+  }
+
+  static KeyManagerFactory buildKeyManagerFactory(
       X509Certificate[] certChainFile,
       String keyAlgorithm,
       PrivateKey key,
@@ -233,18 +245,6 @@ public final class SslContextBuilder {
     ks.load(null, null);
     ks.setKeyEntry("key", key, keyPasswordChars, certChain);
     return ks;
-  }
-
-  static KeyManagerFactory buildKeyManagerFactory(
-      KeyStore ks, String keyAlgorithm, char[] keyPasswordChars, KeyManagerFactory kmf)
-      throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
-    // Set up key manager factory to use our key store
-    if (kmf == null) {
-      kmf = KeyManagerFactory.getInstance(keyAlgorithm);
-    }
-    kmf.init(ks, keyPasswordChars);
-
-    return kmf;
   }
 
   private static <T> T[] toArray(Iterable<? extends T> iterable, T[] prototype) {

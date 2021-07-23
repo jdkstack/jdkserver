@@ -39,37 +39,6 @@ public class SslSocketChannelInputStream extends InputStream {
     bbuf = allocate(BufType.APPLICATION);
   }
 
-  public int read(byte[] buf, int off, int len) throws IOException {
-    if (closed) {
-      throw new IOException("SSL stream is closed");
-    }
-    if (eof) {
-      return 0;
-    }
-    int available = 0;
-    if (!needData) {
-      available = bbuf.remaining();
-      needData = (available == 0);
-    }
-    if (needData) {
-      bbuf.clear();
-      WrapperResult r = sslStreams.recvData(bbuf);
-      bbuf = r.buf == bbuf ? bbuf : r.buf;
-      if ((available = bbuf.remaining()) == 0) {
-        eof = true;
-        return 0;
-      } else {
-        needData = false;
-      }
-    }
-    /* copy as much as possible from buf into users buf */
-    if (len > available) {
-      len = available;
-    }
-    bbuf.get(buf, off, len);
-    return len;
-  }
-
   public int available() throws IOException {
     return bbuf.remaining();
   }
@@ -113,6 +82,37 @@ public class SslSocketChannelInputStream extends InputStream {
   public void close() throws IOException {
     eof = true;
     engine.closeInbound();
+  }
+
+  public int read(byte[] buf, int off, int len) throws IOException {
+    if (closed) {
+      throw new IOException("SSL stream is closed");
+    }
+    if (eof) {
+      return 0;
+    }
+    int available = 0;
+    if (!needData) {
+      available = bbuf.remaining();
+      needData = (available == 0);
+    }
+    if (needData) {
+      bbuf.clear();
+      WrapperResult r = sslStreams.recvData(bbuf);
+      bbuf = r.buf == bbuf ? bbuf : r.buf;
+      if ((available = bbuf.remaining()) == 0) {
+        eof = true;
+        return 0;
+      } else {
+        needData = false;
+      }
+    }
+    /* copy as much as possible from buf into users buf */
+    if (len > available) {
+      len = available;
+    }
+    bbuf.get(buf, off, len);
+    return len;
   }
 
   public int read(byte[] buf) throws IOException {
