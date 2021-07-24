@@ -146,5 +146,5 @@
     <sonar.organization>jdkstack</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
   </properties>
-  <version>11.0.1-SNAPSHOT</version>
+  <version>11.0.11</version>
 </project>
