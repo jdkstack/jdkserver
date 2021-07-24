@@ -17,21 +17,5 @@
       <version>11.0.11</version>
       <scope>compile</scope>
     </dependency>
-    <dependency>
-      <artifactId>jdklog-core</artifactId>
-      <groupId>org.jdkstack</groupId>
-      <version>11.0.11</version>
-    </dependency>
-    <dependency>
-      <groupId>org.glassfish.grizzly</groupId>
-      <artifactId>grizzly-framework</artifactId>
-      <version>3.0.0</version>
-    </dependency>
   </dependencies>
-
-  <properties>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
-  </properties>
-
 </project>
