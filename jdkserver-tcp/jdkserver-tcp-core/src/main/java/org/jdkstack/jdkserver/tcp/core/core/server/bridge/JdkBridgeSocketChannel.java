@@ -21,8 +21,6 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import org.jdkstack.jdklog.logging.api.spi.Log;
-import org.jdkstack.jdklog.logging.core.factory.LogFactory;
 import org.jdkstack.jdkserver.tcp.core.api.core.bridge.JdkBridgeChannel;
 import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
 import org.jdkstack.jdkserver.tcp.core.api.core.handler.Handler;
@@ -39,8 +37,6 @@ import org.jdkstack.jdkserver.tcp.core.ssl.socket.SslSocketChannelInputStream;
 import org.jdkstack.jdkserver.tcp.core.ssl.socket.SslSocketChannelOutputStream;
 
 public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBridgeChannel {
-  /** . */
-  private static final Log LOG = LogFactory.getLog(JdkBridgeSocketChannel.class);
 
   private final SelectorProvider provider = SelectorProvider.provider();
   private SelectionKey selectionKey;
@@ -358,7 +354,7 @@ public class JdkBridgeSocketChannel extends AbstractJdkChannel implements JdkBri
     byte[] b = new byte[1024];
     inputStream.read(b);
     String s = new String(b, StandardCharsets.UTF_8);
-    LOG.error("服务端接收到的数据:{}", s);
+    //LOG.error("服务端接收到的数据:{}", s);
     System.out.println(s);
   }
 

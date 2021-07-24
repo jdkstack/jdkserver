@@ -22,8 +22,6 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import org.jdkstack.jdklog.logging.api.spi.Log;
-import org.jdkstack.jdklog.logging.core.factory.LogFactory;
 import org.jdkstack.jdkserver.tcp.core.api.core.client.JdkClientChannel;
 import org.jdkstack.jdkserver.tcp.core.api.core.codecs.Message;
 import org.jdkstack.jdkserver.tcp.core.api.core.handler.Handler;
@@ -39,8 +37,6 @@ import org.jdkstack.jdkserver.tcp.core.ssl.socket.SslSocketChannelInputStream;
 import org.jdkstack.jdkserver.tcp.core.ssl.socket.SslSocketChannelOutputStream;
 
 public class JdkClientSocketChannel extends AbstractJdkChannel implements JdkClientChannel {
-  /** . */
-  private static final Log LOG = LogFactory.getLog(JdkClientSocketChannel.class);
 
   private final SelectorProvider provider = SelectorProvider.provider();
   private final SocketChannel socketChannel = this.socketChannel();

@@ -15,11 +15,5 @@
       <artifactId>jdkserver-tcp-api</artifactId>
       <version>11.0.11</version>
     </dependency>
-    <dependency>
-      <groupId>org.jdkstack</groupId>
-      <artifactId>jdklog-core</artifactId>
-      <version>11.0.11</version>
-      <scope>compile</scope>
-    </dependency>
   </dependencies>
 </project>
