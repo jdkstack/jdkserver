@@ -7,7 +7,7 @@
     <dependency>
       <artifactId>netty-all</artifactId>
       <groupId>io.netty</groupId>
-      <version>4.1.66.Final</version>
+      <version>4.1.67.Final</version>
     </dependency>
 
     <dependency>
