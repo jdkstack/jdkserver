@@ -29,7 +29,14 @@ public class NetworkByteToMessageDecoder extends ByteToMessageDecoder {
   @Override
   protected void decode(final ChannelHandlerContext ctx, final ByteBuf in, final List<Object> out)
       throws Exception {
+    in.markReaderIndex();
+    // 读取消息长度
     int totalLength = in.readInt();
+    // 如果可以读的数据小于协议中的数据，需要重置一下读的下标，重新读取
+    if (in.readableBytes() < totalLength) {
+      in.resetReaderIndex();
+      return;
+    }
     // 获取消息的第一个字节大写的S.
     final byte start = in.readByte();
     // 如果第一个字节不是大写的S,ASCII码83,则消息是无效的.

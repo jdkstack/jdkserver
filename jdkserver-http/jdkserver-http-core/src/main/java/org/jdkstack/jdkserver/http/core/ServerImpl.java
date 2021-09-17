@@ -511,7 +511,7 @@ public class ServerImpl implements TimeSource {
                 continue;
               }
               SocketChannel chan = schan.accept();
-              // optimist there's a channel
+              // OPTIMIST THERE'S A CHANNEL
               if (chan != null) {
                 // Set TCP_NODELAY, if appropriate
                 if (ServerConfig.noDelay()) {

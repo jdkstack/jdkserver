@@ -18,13 +18,15 @@ public class ServerReadWriteHandler implements Handler<NetSocket> {
 
   @Override
   public void handle(NetSocket connection) {
-    NetworkMessage msg = new NetworkMessage();
-    msg.setPriority((byte) 0);
-    msg.setSessionId(UUID.randomUUID().getMostSignificantBits());
-    msg.setType((byte) 121);
-    msg.setBody("我是服务器端哦嘻");
-    msg.setLength(19999);
-    connection.writeNetworkMessage(msg);
+    for (int i = 0; i < 100; i++) {
+      NetworkMessage msg = new NetworkMessage();
+      msg.setPriority((byte) 0);
+      msg.setSessionId(UUID.randomUUID().getMostSignificantBits());
+      msg.setType((byte) 121);
+      msg.setBody("我是服务器端哦嘻");
+      msg.setLength(19999);
+      connection.writeNetworkMessage(msg);
+    }
     connection.handlerNetworkMessage(
         object -> {
           NetworkMessage msg1 = new NetworkMessage();
